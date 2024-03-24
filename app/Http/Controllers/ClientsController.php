@@ -36,10 +36,9 @@ class ClientsController extends Controller
     {
         //
 
-
         $client = Clients::create($request->validated());
 
-        return to_route("clients.show");
+        return to_route("clients.show", $client->id);
 
 
     }
@@ -47,11 +46,11 @@ class ClientsController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Clients $clients)
+    public function show(Clients $clients, $id)
     {
-        //
+            $client = Clients::find($id);
 
-        return Inertia::render("clients.show", ["clients"=> $clients]);
+        return Inertia::render("Clients/Show", $client);
 
     }
 

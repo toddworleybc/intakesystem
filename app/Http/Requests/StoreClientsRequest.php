@@ -11,7 +11,7 @@ class StoreClientsRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -28,7 +28,7 @@ class StoreClientsRequest extends FormRequest
             "phone" => "required",
             "location" => "required",
             "quote" => "required|numeric",
-            "website_details" => "required"
+            "details" => "required"
         ];
     }
 }

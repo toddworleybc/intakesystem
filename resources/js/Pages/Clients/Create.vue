@@ -19,8 +19,13 @@
 // submits the create client form
 
     function submitForm() {
+       const $url = route('clients.store');
 
-        form.post(route('clients.store'));
+        form.post($url, {
+            onError: function(errors) {
+                console.log(errors);
+            }
+        });
 
     } 
 
@@ -48,25 +53,25 @@
                     <div class="mb-8">
                         <label class="mb-1 text-xl block" for="first-name">Full Name</label>
                         <div v-if="form.errors.name" class="bg-red-500 text-white w-3/4 py-1 px-4 rounded-sm mb-2"><p>{{ form.errors.name }} Hello</p></div>
-                        <input class="block rounded-lg w-3/4 border-gray-400 shadow-gray-200 shadow-md py-2" type="text" name="name" id="name">
+                        <input v-model="form.name" class="block rounded-lg w-3/4 border-gray-400 shadow-gray-200 shadow-md py-2" type="text" name="name" id="name">
                     </div>
 
                     <div class="mb-8">
                         <label class="mb-1 text-xl block" for="email">Email</label>
                         <div v-if="form.errors.email" class="bg-red-500 text-white w-3/4 py-1 px-4 rounded-sm mb-2"><p>{{ form.errors.email }} Hello</p></div>
-                        <input class="block rounded-lg w-3/4 border-gray-400 shadow-gray-200 shadow-md py-2" type="email" name="email" id="email">
+                        <input v-model="form.email" class="block rounded-lg w-3/4 border-gray-400 shadow-gray-200 shadow-md py-2" type="email" name="email" id="email">
                     </div>
 
                     <div class="mb-8">
                         <label class="mb-1 text-xl block" for="phone">Phone</label>
                         <div v-if="form.errors.phone" class="bg-red-500 text-white w-3/4 py-1 px-4 rounded-sm mb-2"><p>{{ form.errors.phone }} Hello</p></div>
-                        <input class="block rounded-lg w-3/4 border-gray-400 shadow-gray-200 shadow-md py-2" type="tel" name="phone" id="phone">
+                        <input v-model="form.phone" class="block rounded-lg w-3/4 border-gray-400 shadow-gray-200 shadow-md py-2" type="tel" name="phone" id="phone">
                     </div>
 
                     <div class="mb-8">
                         <label class="mb-1 text-xl block" for="location">Location</label>
                         <div v-if="form.errors.location" class="bg-red-500 text-white w-3/4 py-1 px-4 rounded-sm mb-2"><p>{{ form.errors.location }} Hello</p></div>
-                        <input class="block rounded-lg w-3/4 border-gray-400 shadow-gray-200 shadow-md py-2" type="text" name="location" id="location">
+                        <input v-model="form.location" class="block rounded-lg w-3/4 border-gray-400 shadow-gray-200 shadow-md py-2" type="text" name="location" id="location">
                     </div>
 
                 </div>
@@ -78,13 +83,13 @@
                     <div class="mb-8">
                         <label class="mb-1 text-xl block" for="Quote">Quote</label>
                         <div v-if="form.errors.quote" class="bg-red-500 text-white w-3/4 py-1 px-4 rounded-sm mb-2"><p>{{ form.errors.quote }} Hello</p></div>
-                        <input class="block rounded-lg w-3/4 border-gray-400 shadow-gray-200 shadow-md py-2" type="text" name="quote" id="quote">
+                        <input v-model="form.quote" class="block rounded-lg w-3/4 border-gray-400 shadow-gray-200 shadow-md py-2" type="text" name="quote" id="quote">
                     </div>
 
                     <div class="mb-8">
                         <label class="mb-1 text-xl block" for="website-details">Website Details</label>
                         <div v-if="form.errors.details" class="bg-red-500 text-white w-3/4 py-1 px-4 rounded-sm mb-2"><p>{{ form.errors.details }} Hello</p></div>
-                        <textarea class="block rounded-lg w-full border-gray-400 shadow-gray-200 shadow-md py-2" rows="10" type="text" name="details" id="details"></textarea>
+                        <textarea v-model="form.details" class="block rounded-lg w-full border-gray-400 shadow-gray-200 shadow-md py-2" rows="10" name="details" id="details"></textarea>
                     </div>
 
                     <div>
