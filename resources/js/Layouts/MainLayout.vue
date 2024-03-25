@@ -36,12 +36,32 @@
 
 <style>
 
+h2 {
+    @apply text-2xl font-semibold;
+}
+
+h3 {
+    @apply text-xl font-semibold;
+}
+
+p {
+    @apply mb-2;
+}
+
 .btn {
-    @apply py-2 inline-block px-4 text-white rounded-md shadow-lg active:shadow-sm transform active:scale-95 active:bg-gray-500 transition-all;
+    @apply py-2 inline-block px-4 text-white rounded-md shadow-lg active:shadow-sm transform active:scale-95 active:bg-gray-500 transition-all bg-blue-500;
 }
 
 .btn-safe {
     @apply bg-green-600;
+}
+
+.btn-warning {
+    @apply bg-yellow-500;
+}
+
+.btn-danger {
+    @apply bg-red-500;
 }
 
 

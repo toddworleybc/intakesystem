@@ -6,6 +6,8 @@ use App\Models\Clients;
 use App\Http\Requests\StoreClientsRequest;
 use App\Http\Requests\UpdateClientsRequest;
 use Inertia\Inertia;
+use Illuminate\Http\Request;
+
 
 class ClientsController extends Controller
 {
@@ -38,7 +40,11 @@ class ClientsController extends Controller
 
         $client = Clients::create($request->validated());
 
-        return to_route("clients.show", $client->id);
+
+        return to_route("clients.show", [
+            $client->id,
+            "client_created" => true
+        ]);
 
 
     }
@@ -46,10 +52,18 @@ class ClientsController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Clients $clients, $id)
-    {
-            $client = Clients::find($id);
+    public function show(Clients $clients, $id, Request $request)
+    {   
+       
+        $client = Clients::find($id);
 
+        
+        $client['created'] = $request->query("client_created") ? true : false;
+
+
+        $client["createdAt"] = $client->created_at->format("F jS, Y, g:i a");
+        $client["updatedAt"] = $client->updated_at->format("F jS, Y, g:i a");
+            
         return Inertia::render("Clients/Show", $client);
 
     }
