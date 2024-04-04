@@ -27,8 +27,13 @@ class StoreClientsRequest extends FormRequest
             "email"=> "required|email",
             "phone" => "required",
             "location" => "required",
-            "quote" => "required|numeric",
-            "details" => "required"
+            "quote" => "string|nullable",
+            "details" => "required",
+            "domains" => "string",
+            "hosting" => "required",
+            "create_quote" => "boolean",
+            "payment_option" => "string",
+            "welcome_email_sent" => "boolean"
         ];
     }
 }

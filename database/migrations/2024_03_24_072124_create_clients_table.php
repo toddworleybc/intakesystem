@@ -18,7 +18,14 @@ return new class extends Migration
             $table->string('phone');
             $table->string('location');
             $table->string('quote');
+            $table->boolean('create_quote');
             $table->text('details');
+            $table->string('domains');
+            $table->string('hosting');
+            $table->string('deposit');
+            $table->string('payment_option');
+            $table->boolean('welcome_email_sent');
+            $table->string('status')->default("pending");
             $table->timestamps();
         });
     }

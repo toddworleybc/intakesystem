@@ -1,43 +1,37 @@
 <?php
 
 use App\Http\Controllers\ClientsController;
-use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
+use App\Http\Controllers\SendEmailsController;
+use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get("/", function () {
-    return Inertia::render("Dashboard");
-})->name('dashboard');
-
-// Route::get("/intake", function () {
-//     return Inertia::render("Intake");
-// })->name('intake');
-
-// Route::prefix('/clients')->group( function() {
+    return Inertia::render("Clients/Read");
+})->name('clients.index');
 
 
-    Route::resource('clients', ClientsController::class);
 
 
-    // // Read =====/
-    // Route::get("/", function () {
-    //     return Inertia::render("Clients/Read");
-    // })->name('clients');
+Route::resource('clients', ClientsController::class);
 
-    // // Create ====/ 
-    // Route::get("/create", function () {
-    //     return Inertia::render("Clients/Create");
-    // })->name('clients.create');
+Route::resource('payments', PaymentController::class);
 
-    // // Edit ====/ 
+Route::post('payments/create-new-payment', [PaymentController::class,'createNewPayment'])->name('payments.create.new');
 
-// } );
+Route::post('welcome-email', [SendEmailsController::class,'welcomeEmailSend'])->name('welcome.email.send');
+
+
+// Emails View TESTING
+
+// Route::get('email-test', function() {
+//     return view('Emails/welcomeEmail');
+// });
+
+
+   
 
 
 
 
 
-Route::get("/emails", function () {
-    return Inertia::render("Emails");
-})->name('emails');
