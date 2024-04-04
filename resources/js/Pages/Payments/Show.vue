@@ -181,12 +181,12 @@
                     <h2 class="mb-2">Payment Information</h2>
                     <div class="border-b-2 border-gray-300 w-8/12">
                         <p><span>To:</span> {{ payment.client.name }}</p>
-                        <p><span>Sent To Email:</span> {{ payment.client.email }}</p>
+                        <p><span>Sent To Email:</span> <a :href="'mailto:'+payment.client.email">{{ payment.client.email }}</a></p>
                         <p><span>Payment Method:</span> {{ payment.payment_method }}</p>
                         <p><span>Amount:</span> {{ payment.amount }}</p>
-                        <p>Payment Link: {{ payment.payment_link }}</p>
+                        
 
-                        <div v-if="payment.method === 'Credit Card'">
+                        <div v-if="payment.payment_method === 'Credit Card'">
                             <p><span>Processing Fee:</span> {{ payment.processing_fee }}</p>
                             <p><span>Card Amount:</span> {{ payment.card_amount }}</p>
                             <p><span>Payment Link:</span> {{ payment.payment_link }}</p>

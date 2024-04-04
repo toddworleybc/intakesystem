@@ -228,7 +228,7 @@ class PaymentController extends Controller
     private function CreatePayment($order) {
 
 
-        $stripe = new \Stripe\StripeClient(env("STRIPE_SECRET_KEY"));
+        $stripe = new \Stripe\StripeClient(config('services.stripe.key'));
 
       
 

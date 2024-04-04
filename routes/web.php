@@ -6,9 +6,7 @@ use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get("/", function () {
-    return Inertia::render("Clients/Read");
-})->name('clients.index');
+Route::get("/",[ClientsController::class, 'index'])->name('clients.index');
 
 
 

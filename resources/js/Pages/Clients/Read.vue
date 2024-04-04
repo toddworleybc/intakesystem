@@ -6,7 +6,7 @@
     import MessageBanner from '@/Components/messageBanner.vue';
 
     const clients = usePage().props.clients;
-
+    
 
     function statusBg(client) {
 

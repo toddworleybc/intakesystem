@@ -200,7 +200,7 @@
                     <h2 class="mb-2">Client Information</h2>
                     <div class="border-b-2 border-gray-300 w-8/12">
                         <p><span>Name:</span> {{ client.name }}</p>
-                        <p><span>Email:</span> {{ client.email }}</p>
+                        <p><span>Email:</span> <a :href="'mailto:'+client.email">{{ client.email }}</a></p>
                         <p><span>Phone:</span> {{ client.phone }}</p>
 
                         <p><span>Domain(s):</span></p>

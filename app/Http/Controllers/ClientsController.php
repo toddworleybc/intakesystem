@@ -25,7 +25,9 @@ class ClientsController extends Controller
        
         
         $allClients = $clients->all()->reverse()->values();
-      
+        
+        // dd($allClients);
+
 
         return Inertia::render("Clients/Read", ["clients" => $allClients]);
 
