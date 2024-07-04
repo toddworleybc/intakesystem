@@ -5,21 +5,54 @@
     import { computed, watch, ref } from 'vue';
     import { router, usePage, useForm } from '@inertiajs/vue3';
     import Loader from '@/Utilities/loader.js';
+    import currencyFormater from '@/Utilities/currencyFormater';
 
 
-
-    
     const payment = usePage().props.payment;
     const enableNoteEditing = ref(false);
-    const showPaymentSendingMessage = ref(null);
     
 
     const form = useForm("PaymentStatus", payment);
 
 
-   
+    function receiptSend() {
+
+        const sendReceipt = confirm(`Do you want to send a receipt to ${payment.client.name}`);
+
+        if(!sendReceipt) return;
+
+        router.post( route('receipt.send'), payment, {
+
+            onStart : function() {
+                Loader.action = "Sending Receipt";
+                Loader.isLoading = true;
+           },
+
+           onFinish : function() {
+                Loader.isLoading = false;
+           },
+           preserveState: false
+
+        } );
+
+    }//
+
 
     function updatePaymentStatus() {
+
+        if(form.status === 'void') {
+            const confirmVoidPayment = confirm('Are you sure you want to void this payment. It cannot be edited once voided!');
+            
+            if(!confirmVoidPayment) return;
+        }
+
+
+        if(form.status === 'paid') {
+            const confirmVoidPayment = confirm('Are you sure you want to make this payment paid. It cannot be edited once marked as paid!');
+            
+            if(!confirmVoidPayment) return;
+        }
+        
 
 
         form.patch(route('payments.update', payment.id), {
@@ -60,57 +93,58 @@
     }) );
 
 
-    const allowPaymentCreating = computed(() => {
-        return payment.initial_payment && payment.status === "pending" ? false : true;
-    })//====
-
-
     function exitPayment(id) {
 
         router.get(route('clients.show', id));
 
     }//==
 
-    function resendPayment() {
+    function sendPayment() {
         
-        const confirmResend = confirm('Resend This Payment?');
+        const confirmResend = confirm(`Send this payment ${payment.client.name}?`);
 
         if(!confirmResend) return;
 
-        router.post(route('payments.create.new'), {
-            'resendPayment' : true,
-            'paymentId' : payment.id,
-    }, {
+        router.post(route('payment.send'), payment, {
             
             onStart : () => {
-                Loader.action = "Resending Payment";
+                Loader.action = "Sending Payment";
                 Loader.isLoading = true;
-           },
-           onSuccess: () => {
-               showPaymentSendingMessage.value = 'resend';
            },
            onFinish : () => {
                 Loader.isLoading = false;
-           }
-          
-          
+           },
+           preserveState: false
+            
     });
 
     }//===
-
-    function paymentUpdated() {
-       const urlParams = new URLSearchParams(window.location.search);
-       
-       return urlParams.has('paymentUpdated') ? true : false;
-    }
-
-    function createdPayment() {
-       const urlParams = new URLSearchParams(window.location.search);
-       
-       return urlParams.get('createdPayment') === '1' ? true : false;
-    }
     
+    function paymentDatesSent() {
+        return payment.payment_sent_count.slice().reverse();
+    }//
 
+    function receiptSentDates() {
+       
+        return payment.receipt_sent_dates.slice().reverse();
+    }//
+
+
+    function viewPaymentEmail() {
+        router.get(route('view.email'), {
+            'view': 'payment_email',
+            'client': payment.client,
+            'payment': payment
+        });
+    }
+
+    function viewReceiptEmail() {
+        router.get(route('view.email'), {
+            'view': 'receipt_email',
+            'client': payment.client,
+            'payment': payment
+        });
+    }
 
 </script>
 
@@ -119,34 +153,31 @@
 
     <MainLayout>
 
-        <div class="text-white py-2 bg-blue-400 mb-4 flex justify-between items-center px-4">
-            <h1 class="text-2xl text-center text-white bg-blue-400">Payment to {{ payment.client.name }}</h1>
+        <div class="py-2 border-b-2 border-gray-400 mb-4 flex justify-between items-center px-4">
+            <h1 class="text-2xl text-center">Payment to: {{ payment.client.name }}</h1>
             <BtnComponent @click.prevent="exitPayment(payment.client.id)" link="#" type="safe">
                 Back To Client
             </BtnComponent>
         </div>
 
 
-        <MessageBannerComponent :show="paymentUpdated()" type="safe">
-            Payment Updated!
-        </MessageBannerComponent>
-
-        <MessageBannerComponent :show="createdPayment()" type="safe">
-             Payment Successfully Sent To {{ payment.client.name }}!
-        </MessageBannerComponent>
-
-        <MessageBannerComponent :show="showPaymentSendingMessage === 'resend'" type="warning">
-            Payment Resent!
+        <MessageBannerComponent :show="$page.props.flash.success" type="safe">
+            {{ $page.props.flash.success }}
         </MessageBannerComponent>
 
 
         <div class="border border-gray-200 px-4 py-10 rounded-sm shadow-lg relative">
 
-            <div class="border-b-2 border-gray-500 pb-2 mb-10 flex justify-between items-end">
+            
+
+            <div class="border-b-2 border-gray-500 pb-2 mb-2 flex justify-between items-end">
+                <div class="text-lg bg-gray-500 text-white inline-block py-2 px-4 rounded">
+                <p class="mb-0">Payment Amount: {{ payment.payment_method === 'Credit Card' ? currencyFormater(payment.card_amount) : currencyFormater(payment.amount) }}</p>
+            </div>
 
                 <div>
-                    <h3 class="mb-4">{{ payment.for }}</h3>
-                    <div class="flex items-center space-x-4">
+                    <h3 class="mb-4">Payment For: {{ payment.for }}</h3>
+                    <div class="flex items-center justify-center space-x-4">
                         <span class="bg-green-700 text-sm text-white py-1 px-2 rounded">Invoice Id: {{ payment.invoice_id }}</span>
                         <span :class="statusClassObj" class="text-sm text-white py-1 px-2 rounded">
                             Status: <span class="capitalize">{{ payment.status }}</span>
@@ -158,7 +189,16 @@
 
                 <div v-if="payment.status !== 'paid'" class="flex space-x-2 items-center">
 
-                    <BtnComponent v-if="allowPaymentCreating" type="danger" link="#" @click.prevent="resendPayment" >
+                    <div v-if="payment.status === 'void'" class="bg-gray-500 text-white py-2 px-4 rounded">
+                        Void Payment
+                    </div>
+
+
+                    <BtnComponent v-else-if="paymentDatesSent().length === 0"  link="#" @click.prevent="sendPayment" >
+                       Send Payment
+                    </BtnComponent>
+
+                    <BtnComponent v-else-if="paymentDatesSent().length !== 0" type="danger"  link="#" @click.prevent="sendPayment" >
                        Resend Payment
                     </BtnComponent>
 
@@ -168,12 +208,18 @@
 
                 </div>
 
-                <div v-else class="bg-green-500 text-white py-2 px-4 rounded">
-                   Payment Paid
-                </div>
+                <BtnComponent v-else type="warning"  link="#" @click.prevent="receiptSend" >
+                       Send Receipt
+                </BtnComponent>
                 
             </div>
-            
+
+            <div v-if="payment.status === 'pending'" class="mb-10 flex justify-end">
+                <a @click.prevent="viewPaymentEmail" href="#">View Payment Email</a>
+            </div>
+            <div v-else class="mb-10 flex justify-end">
+                <a @click.prevent="viewReceiptEmail" href="#">View Receipt Email</a>
+            </div>
 
             <div id="client-info-container" class="flex">
 
@@ -183,13 +229,13 @@
                         <p><span>To:</span> {{ payment.client.name }}</p>
                         <p><span>Sent To Email:</span> <a :href="'mailto:'+payment.client.email">{{ payment.client.email }}</a></p>
                         <p><span>Payment Method:</span> {{ payment.payment_method }}</p>
-                        <p><span>Amount:</span> {{ payment.amount }}</p>
+                        <p><span>Amount:</span> {{ currencyFormater(payment.amount) }}</p>
                         
 
                         <div v-if="payment.payment_method === 'Credit Card'">
-                            <p><span>Processing Fee:</span> {{ payment.processing_fee }}</p>
-                            <p><span>Card Amount:</span> {{ payment.card_amount }}</p>
-                            <p><span>Payment Link:</span> {{ payment.payment_link }}</p>
+                            <p><span>Processing Fee:</span> {{ currencyFormater(payment.processing_fee) }}</p>
+                            <p><span>Card Amount:</span> {{ currencyFormater(payment.card_amount) }}</p>
+                            <p><span>Payment Link:</span> <a :href="payment.payment_link" target="_blank">{{ payment.payment_link }}</a></p>
                         </div>
                        
                         
@@ -199,6 +245,26 @@
                             <p>Updated: {{  payment.updatedAt  }}</p>
                         </div>
                     </div>
+                    <div v-if="receiptSentDates().length === 0">
+                        <h3 class="my-4">Payment Sent Count: {{ paymentDatesSent().length }}</h3>
+
+                        <p v-if="paymentDatesSent().length !== 0" v-for="(dateSent, i) in paymentDatesSent()" :key="i">Date Sent: {{ dateSent }}</p>
+                        <p v-else class="bg-yellow-500 text-white inline-block text-center py-2 px-4 mt-6">Payment Not Sent Yet</p>
+                    </div>
+
+                    <div v-else>
+                        <h3 class="my-4">Receipt Sent Count: {{ receiptSentDates().length }}</h3>
+
+
+                        <p v-if="receiptSentDates().length !== 0" v-for="(dateSent, i) in receiptSentDates()" :key="i">Date Sent: {{ dateSent }}</p>
+                        <p v-else class="bg-yellow-500 text-white inline-block text-center py-2 px-4 mt-6 border-b-2 border-gray">Receipt Not Sent Yet</p>
+
+                        <h3 class="my-4">Payment Sent Dates {{ paymentDatesSent().length }}</h3>
+
+                        <p v-if="paymentDatesSent().length !== 0" v-for="(dateSent, i) in paymentDatesSent()" :key="i">Date Sent: {{ dateSent }}</p>
+                        <p v-else class="bg-yellow-500 text-white inline-block text-center py-2 px-4 mt-6">Payment Not Sent Yet</p>
+                    </div>
+                   
                    
                     
                 </div>
@@ -213,11 +279,23 @@
                             
                             <form id="payment-status" class="w-full">
                                
-                                <select v-model="form.status" form="payment-status" class="block rounded-lg  shadow-gray-200 shadow-md py-2" id="payment-status">
+                                <select v-if="payment.status === 'pending'" v-model="form.status" form="payment-status" class="block rounded-lg  shadow-gray-200 shadow-md py-2" id="payment-status">
                                     <option value="pending">Pending</option>
                                     <option value="paid">Paid</option>
                                     <option value="void">Void</option>
                                 </select>
+                                <div v-else-if="payment.status === 'void'">
+                                <p  class="bg-gray-700 text-white inline-block py2 px-4">
+                                    Payment Voided
+                                </p>
+                                <p>{{ payment.updatedAt }}</p>
+                            </div>
+                            <div v-else>
+                                <p  class="bg-green-500 text-white inline-block py2 px-4">
+                                    Payment Paid
+                                </p>
+                                <p>{{ payment.updatedAt }}</p>
+                            </div>
                                 <p class="mt-4"><span>Frequency:</span> {{ payment.frequency === 'one_time' ? 'One Time' : 'Recurring'  }}</p>
                                 <div class="w-full border-t border-gray-400 mt-4 ">
 
@@ -244,11 +322,14 @@
                         
 
                     </div>
-
+                        
                     
-                        <button class="btn btn-safe mt-4" @click.prevent="updatePaymentStatus">
+                        <button v-if="payment.status === 'pending'" class="btn btn-safe mt-4" @click.prevent="updatePaymentStatus">
                                 Update Payment
                             </button>
+                            
+                           
+
                 </div>
                 <!-- #/ payment status -->
 

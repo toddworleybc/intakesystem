@@ -3,6 +3,7 @@
     import BtnComponent from '@/Components/Button.vue';
     import { PlusCircleIcon } from '@heroicons/vue/24/solid';
     import { usePage, Link, router } from '@inertiajs/vue3';
+    import phoneNumberFormat from '@/Utilities/phoneNumberFormater';
     import MessageBanner from '@/Components/messageBanner.vue';
 
     const clients = usePage().props.clients;
@@ -28,11 +29,10 @@
     }
 
 
-    function clientDeleted() {
-       const urlParams = new URLSearchParams(window.location.search);
-       
-       return urlParams.has('clientDeleted') ? true : false;
-    }
+    function activePendingClients(client) {
+        return client.status !== 'cancelled';
+    }//
+
 
 </script>
 
@@ -42,12 +42,12 @@
     <MainLayout>
 
 
-        <div class="text-white py-2 bg-blue-400 mb-4 text-center px-4">
-            <h1 class="text-2xl">Evergreen By Design Clients</h1>
+        <div class="text-white py-2 bg-blue-600 mb-4 text-center px-4">
+            <h1 class="text-2xl">Clients</h1>
         </div>
 
-        <MessageBanner :show="clientDeleted()" type="safe">
-            Client has been deleted!
+        <MessageBanner :show="$page.props.flash.success" type="warning">
+            {{ $page.props.flash.success }}
         </MessageBanner>
 
         <section class="flex justify-between items-center my-6">
@@ -65,21 +65,21 @@
             </div>
         </section>
 
-        <section v-if="clients.length !== 0">
+        <section v-if="clients.filter(activePendingClients).length !== 0">
             <table class="table-fixed border-collapse border w-full">
                 <thead class="bg-green-300">
                     <tr>
-                        <th>Id</th>
                         <th>Name</th>
+                        <th>Phone</th>
                         <th>Email</th>
                         <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
 
-                    <tr v-for="client in clients" @click.prevent="editUser(client.id)" :key="client.id" class="text-center">
-                        <td>{{ client.id }}</td>
+                    <tr v-for="client in clients.filter(activePendingClients)" @click.prevent="editUser(client.id)" :key="client.id" class="text-center">
                         <td>{{ client.name }}</td>
+                        <td>{{ phoneNumberFormat(client.phone) }}</td>
                         <td>{{ client.email }}</td>
                         <td><span :class="statusBg(client)" class="rounded-lg capitalize py-1 w-1/2 block mx-auto text-white">{{ client.status }}</span></td>
                     </tr>

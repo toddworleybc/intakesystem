@@ -2,8 +2,11 @@
     import MainLayout from '@/Layouts/MainLayout.vue';
     import { useForm } from '@inertiajs/vue3';
     import Loader from '@/Utilities/loader.js';
-    import { ref } from 'vue';
+    import { ref, watch, watchEffect, watchPostEffect } from 'vue';
+    import currencyFormater from '@/Utilities/currencyFormater';
+    
     import MessageBannerComponent from '@/Components/messageBanner.vue';
+    import inputCurrencyFormat from '@/Utilities/inputCurrencyFormat';
 
 
     const formError = ref(null);
@@ -15,14 +18,40 @@
         phone: null,
         location: null,
         quote: null,
-        domains: null,
-        create_quote: false,
+        domains:[],
+        pro_emails: [],
+        create_quote: true,
         welcome_email_sent: false,
         hosting: "Self Hosting",
         payment_option: "Credit Card",
         details: null
     });
 
+
+
+// set quote input
+    function setQuoteInput(e) {
+        form.quote = inputCurrencyFormat(e.target.value);
+    }
+
+
+// add empty domain
+    function addDomain() {
+        form.domains.push("");
+    }
+
+    function removeDomain(i) {
+        form.domains.splice(i, 1);
+    }
+
+    // add empty domain
+    function addProEmail() {
+        form.pro_emails.push("");
+    }
+
+    function removeProEmail(i) {
+        form.pro_emails.splice(i, 1);
+    }
     
 // submits the create client form
 
@@ -44,8 +73,6 @@
     } 
 
 
-
-
 </script>
 
 
@@ -59,8 +86,6 @@
         <MessageBannerComponent :show="formError" type="danger">
             {{ formError }}
         </MessageBannerComponent>
-
-
 
 
         <div class="border border-gray-200 px-4 py-10 rounded-sm shadow-lg">
@@ -106,6 +131,22 @@
                                 <option value="Active">Active</option>
                             </select>
                         </div>
+                        <div class="mb-8">
+                            <label class="mb-1 text-xl block" for="pro-emails">Professional Email(s)</label>
+                        
+                            <div v-if="form.errors.pro_emails" class="bg-red-500 text-white w-3/4 py-1 px-4 rounded-sm mb-2"><p class="mb-0">{{ form.errors.pro_emails }}</p></div>
+
+                            <div v-for="(pro_emails, i) in form.pro_emails" :key="i" class="flex space-x-4 mb-6">
+                                <input  v-model="form.pro_emails[i]" class="block rounded-lg w-3/4 border-gray-400 shadow-gray-200 shadow-md py-2" type="email"  href="#"name="pro_emails" id="pro_emails">
+                                <span @click.prevent="removeProEmail(i)" class="self-center text-blue-600 cursor-pointer hover:text-blue-200 active:text-gray-400">remove</span>
+                            </div>
+                            
+
+                            <button @click.prevent="addProEmail" class="btn btn-info">
+                                Add Pro.Email
+                            </button>
+                        
+                        </div>
                     </div>
                     
 
@@ -113,29 +154,29 @@
                 <!-- #/left side  -->
 
                 <div id="right-side" class="w-1/2">
-                    <div class="flex space-x-4 items-center mb-4">
-                        <h2 class="mb-0">Create Quote</h2>
-                        <input v-model="form.create_quote" class="rounded-full border-gray-400 shadow-gray-200 shadow-md p-2" type="checkbox" >
-                    </div>
-                    <div v-if="form.create_quote || form.errors.quote" id="hide-quote">
-                    
-                        <div class="mb-8">
-                            <label class="mb-1 text-xl block" for="Quote">Quote</label>
-                            <div v-if="form.errors.quote" class="bg-red-500 text-white w-3/4 py-1 px-4 rounded-sm mb-2"><p class="mb-0">{{ form.errors.quote }}</p></div>
-                            <input v-model="form.quote" class="block rounded-lg w-3/4 border-gray-400 shadow-gray-200 shadow-md py-2" type="text" name="quote" id="quote" pattern="[0-9]*\.[0-9]{2}" placeholder="100.00">
-                        </div>
 
-                        <div class="mb-8">
-                            <div v-if="form.errors.welcome_email_sent" class="bg-red-500 text-white w-3/4 py-1 px-4 rounded-sm mb-2"><p class="mb-0">{{ form.errors.welcome_email_sent }}</p></div>
-                            <div class="flex items-center space-x-4">
-                                <label class="mb-1 text-xl" for="welcome-email">Don't Send Welcome Email</label>
-                            
-                                <input v-model="form.welcome_email_sent" class="rounded-full border-gray-400 shadow-gray-200 shadow-md p-2" type="checkbox" id="welcome-email">
+                    <div class="mb-8 border-b-2 pb-4 border-gray-400">
+                        <div class="flex items-center space-x-4">
+                            <h3 class="mb-2 text-xl" >Create Quote</h3>
+                            <input type="checkbox" class="rounded-full -mt-2" v-model="form.create_quote">
+                        </div>
+                            <div v-if="form.create_quote">
+                                <div v-if="form.errors.quote" class="bg-red-500 text-white w-3/4 py-1 px-4 rounded-sm mb-2"><p class="mb-0">{{ form.errors.quote }}</p></div>
+                            <div class="space-y-2">
+                                <div class="space-x-4">
+                                    <input @change.prevent="setQuoteInput" :value="form.quote" class="block rounded-lg w-3/4 border-gray-400 shadow-gray-200 shadow-md py-2" type="text" name="quote" id="quote">
+                                </div>
                             </div>
-                            
+                            <div class="mt-4">
+                                <h4 class="mb-2">Deposit Amount: {{ currencyFormater(form.quote / 2) }}</h4>
+                                <div class="mb-2">
+                                    <h4 v-if="form.payment_option === 'Credit Card'">Processing Fee: {{ currencyFormater((form.quote / 2) * .034) }}</h4>
+                                </div>
+                                
+                                <h4 class="font-semibold">Quote Amount: {{ currencyFormater(form.quote) }}</h4>
+                            </div>
                         </div>
                     </div>
-                    <!-- #hide-quote -->
                     
 
                     <div class="mb-8">
@@ -154,13 +195,23 @@
 
                     <div class="mb-8">
                         <label class="mb-1 text-xl block" for="domains">Domain(s)</label>
-                        <p class="italic">comma seperated</p>
+                      
                         <div v-if="form.errors.domains" class="bg-red-500 text-white w-3/4 py-1 px-4 rounded-sm mb-2"><p class="mb-0">{{ form.errors.domains }}</p></div>
-                        <input v-model="form.domains" class="block rounded-lg w-3/4 border-gray-400 shadow-gray-200 shadow-md py-2" type="text" name="domains" id="domains">
+
+                        <div v-for="(domains, i) in form.domains" :key="i" class="flex space-x-4 mb-6">
+                            <input  v-model="form.domains[i]" class="block rounded-lg w-3/4 border-gray-400 shadow-gray-200 shadow-md py-2" type="text"  href="#"name="domains" id="domains">
+                            <span @click.prevent="removeDomain(i)" class="self-center text-blue-600 cursor-pointer hover:text-blue-200 active:text-gray-400">remove</span>
+                        </div>
+                        
+
+                        <button @click.prevent="addDomain" class="btn btn-info">
+                            Add Domain
+                        </button>
+                        
                     </div>
 
                     <div class="mb-8">
-                        <label class="mb-1 text-xl block" for="website-details">Website Details</label>
+                        <label class="mb-1 text-xl block" for="website-details">Website Details <span class="italic ml-2">*note client will see this</span></label>
                         <div v-if="form.errors.details" class="bg-red-500 text-white w-3/4 py-1 px-4 rounded-sm mb-2"><p class="mb-0">{{ form.errors.details }}</p></div>
                         <textarea v-model="form.details" class="block rounded-lg w-full border-gray-400 shadow-gray-200 shadow-md py-2" rows="10" name="details" id="details"></textarea>
                     </div>

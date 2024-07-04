@@ -11,6 +11,7 @@ use App\Http\Controllers\PaymentController;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Number;
+use Illuminate\Support\Arr;
 
 
 class ClientsController extends Controller
@@ -26,7 +27,7 @@ class ClientsController extends Controller
         
         $allClients = $clients->all()->reverse()->values();
         
-        // dd($allClients);
+    
 
 
         return Inertia::render("Clients/Read", ["clients" => $allClients]);
@@ -48,39 +49,52 @@ class ClientsController extends Controller
     public function store(StoreClientsRequest $request, PaymentController $payment)
     {
         //
-       
+        
+        
 
         if($clientStore = $request->validated()) {
-                     
+
+            $clientStore['welcome_email_sent_count'] = json_encode([]);
             
-        // create request deposit
+            
+    // create request deposit
         $clientStore['deposit'] = Number::format(($request->quote / 2), precision: 2);
+
+        $clientStore['deposit'] = preg_replace('/,/', '', $clientStore['deposit']);
+       
 
             
         $clientStore['quote'] = $clientStore['quote'] ? $clientStore['quote'] : '0.00';
 
-        // create client
+    // format domain to json
+            $clientStore['domains'] = json_encode($request->domains);
+
+    // format pro_emails to json
+   
+            $clientStore['pro_emails'] = json_encode($request->pro_emails);
+           
+    // create client
             $client = Clients::create($clientStore);
 
 
-        // create an initial
+    // create an initial quote
         if($client->create_quote) {
 
             $order = [
                 'client' => $client,
                 'amount' => $client->deposit,
                 'notes' => 'Initial deposit for services',
-                'frequency' => 'one_time'
+                'frequency' => 'one_time',
+                'receipt_sent_dates' => []
             ];
 
-        // create initial payment  
+    // create initial payment  
             $payment->store($order, true);
 
         } // create quote
         
-        
 
-          return redirect()->route('clients.show', ['client'=> $client, 'client_created' => true]);
+        return to_route('clients.show', $client)->with('success', "Client has been created!");
 
         }
 
@@ -96,7 +110,6 @@ class ClientsController extends Controller
        
         $client = Clients::find($id);
 
-       
 
     // controls the message banner
         $client['created'] = $request->query("client_created") ? true : false;
@@ -110,11 +123,13 @@ class ClientsController extends Controller
     // Reverse payments for table display
         $payments = $client->payments->reverse()->values();
         
-       
+    // domains back to array format
+        $client["domains"] = json_decode($client["domains"]);
 
-     // Create and array for domains   
-        $client->domains = Str::of($client->domains)->split('/[\s,]+/');
-        
+    // pro_emails back to array format
+        $client["pro_emails"] = json_decode($client['pro_emails']);
+        $client["welcome_email_sent_count"] = json_decode($client["welcome_email_sent_count"]);
+
             
         return Inertia::render("Clients/Show", [
           'client' =>  $client,
@@ -131,27 +146,76 @@ class ClientsController extends Controller
         //
         $client = Clients::find($id);
 
+        $client['domains'] = json_decode($client["domains"]);
+
+        $client['pro_emails'] = json_decode($client["pro_emails"]);
+
+
         return Inertia::render("Clients/Edit", $client);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateClientsRequest $request, Clients $clients, $id)
+    public function update(UpdateClientsRequest $request, Clients $clients, $id, Payment $payments)
     {
         //
 
-
         $client = Clients::find($id);
 
+        
+// restore client if cancelled 
+        if($client->status === 'cancelled') {
+           
+            $client->status = 'pending';
+        
+            // save client
+           $client->save();
+
+
+            return to_route("clients.show",$client)->with('success', 'Client has been restored');
+        }
+        
+
+// Void Pending Payments for Cancel Client
+        if( $request->status === 'cancelled' ) {
+
+            foreach($client->payments as $payment) {
+
+                if($payment->status === 'pending') {
+
+                    $payment = Payment::find($payment->id);
+
+                    $payment->status = 'void';
+
+                    $payment->save();
+
+                }
+
+            }
+
+        }//
+
+// save client
         $client->update($request->all());
 
-        return to_route("clients.show", [
-            $client->id,
-            "client_updated" => true
-        ]);
+// Sets initial payment to pending if client is pending
+        if($client->status === 'pending') {
 
-    }
+            $payment = $payments->find($client->payments)->where('initial_payment', 1);
+
+            $payment->status = 'pending';
+
+            $payment->save();
+        }
+
+        return to_route("clients.show",$client)->with('success', 'Client has been updated!');
+
+    }// end of update
+
+
+
+
 
     /**
      * Remove the specified resource from storage.
@@ -162,11 +226,21 @@ class ClientsController extends Controller
 
         $client = Clients::find($id);
 
+        foreach( $client->payments as $payment ) {
+
+            if($payment->status === "pending") {
+
+                $payment->status = "void";
+
+                $payment->save();
+
+            }
+
+        }       
+
         $client->delete();
 
-       return to_route("clients.index", [
-        "clientDeleted" => true
-       ]);
+       return to_route("clients.index")->with('success', "Client $client->name was deleted!");
 
     }
     

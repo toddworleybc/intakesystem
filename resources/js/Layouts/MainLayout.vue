@@ -1,9 +1,13 @@
 <script setup>
-    import { Head, Link } from '@inertiajs/vue3';
+    import { Head, Link, usePage } from '@inertiajs/vue3';
     import { HalfCircleSpinner } from 'epic-spinners';
     import Loader from '@/Utilities/loader.js';
+    import { computed } from 'vue';
 
-   
+    const activeNav = usePage().component.match(/^\w+/)[0];
+
+    
+
 
 </script>
 
@@ -33,8 +37,9 @@
         <aside class="w-1/6 border-r-2 border-gray-600 px-6 py-4 text-center text-lg">
             <nav>
                 <ul>
-                    <li class="mb-4"><Link :href="route('clients.index')">Clients</Link></li>
-                    <li class="mb-4"><Link :href="route('clients.create')">New Intake</Link></li>  
+                    <li :class="[activeNav === 'Clients' ? 'bg-green-200' : '']" class="mb-4"><Link :href="route('clients.index')">Clients</Link></li>
+                    <li :class="[activeNav === 'Payments' ? 'bg-green-200' : '']" class="mb-4"><Link :href="route('payments.index')">Payments</Link></li>  
+                    <li :class="[activeNav === 'Archives' ? 'bg-green-200' : '']" class="mb-4"><Link :href="route('archives')">Archives</Link></li>
                 </ul>
             </nav>
         </aside>

@@ -3,10 +3,12 @@
     import { useForm, router, usePage } from '@inertiajs/vue3';
     import Loader from '@/Utilities/loader.js';
     import BtnComponent from '@/Components/Button.vue';
+    import inputCurrencyFormat from '@/Utilities/inputCurrencyFormat';
 
 
 
     const client = usePage().props.client;
+    const initialPayment = usePage().props.initialPayment;
 
 
     const form = useForm("CreatePayment", {
@@ -17,20 +19,21 @@
         notes: null
     });
 
+// set quote input
+function setQuoteInput(e) {
+        form.amount = inputCurrencyFormat(e.target.value);
+    }
+
     
 // submits the create client form
 
     function submitPayment() {
 
-        const confirmPayment = confirm(`Are you sure you want to send payment to ${client.name}`);
-
-        if(!confirmPayment) return;
-
        const $url = route('payments.create.new');
 
         form.post($url, {
            onStart : function() {
-                Loader.action = "Sending Payment";
+                Loader.action = "Creating Payment";
                 Loader.isLoading = true;
            },
            onFinish : function() {
@@ -45,6 +48,24 @@
         router.get(route('clients.show', client.id));
 
     }//==
+
+
+    function createFinalPayment(e) {
+
+        const setFinalPayment = e.target.checked;
+        
+
+        if(setFinalPayment) {
+            form.for = "EBD Final Website Payment Balance";
+            form.amount = initialPayment.amount;
+            form.notes = "Final Payment for Completed Website"
+        } else {
+            form.for = null;
+            form.amount = null;
+            form.notes = null;
+        }
+
+    }
 
 
 </script>
@@ -72,17 +93,23 @@
             <form @submit.prevent="submitForm" id="client-create" class="flex justify-center items-start">
 
                 <div id="left-side" class="w-1/2">
+
+                    <div class="mb-2 flex space-x-5 items-center">
+                        <label class="mb-1 text-xl" for="final-payment">Final Payment</label>
+                        <input @change.prevent="createFinalPayment" type="checkbox">
+                        
+                    </div>
                     
                     <div class="mb-8">
-                        <label class="mb-1 text-xl block" for="payment-for">For</label>
+                        <label class="mb-1 text-xl block" for="payment-for">For <small class="italic">(*Note client will see)</small></label>
                         <div v-if="form.errors.for" class="bg-red-500 text-white w-3/4 py-1 px-4 rounded-sm mb-2"><p class="mb-0">{{ form.errors.for }}</p></div>
-                        <input v-model="form.for" class="block rounded-lg w-3/4 border-gray-400 shadow-gray-200 shadow-md py-2" type="text" id="payment-for">
+                        <input v-model="form.for" class="block rounded-lg w-3/4 border-gray-400 shadow-gray-200 shadow-md py-2" type="text" id="payment-for" placeholder="EBD Website and Graphic Services">
                     </div>
 
                     <div class="mb-8">
                         <label class="mb-1 text-xl block" for="amount">Amount</label>
                         <div v-if="form.errors.amount" class="bg-red-500 text-white w-3/4 py-1 px-4 rounded-sm mb-2"><p class="mb-0">{{ form.errors.amount }} </p></div>
-                        <input v-model="form.amount" class="block rounded-lg w-3/4 border-gray-400 shadow-gray-200 shadow-md py-2" type="text" name="amount" id="amount" pattern="[0-9]*\.[0-9]{2}" placeholder="100.00">
+                        <input @change.prevent="setQuoteInput" :value="form.amount" class="block rounded-lg w-3/4 border-gray-400 shadow-gray-200 shadow-md py-2" type="text" name="amount" id="amount">
                     </div>
 
                     <div class="mb-8">
@@ -96,13 +123,13 @@
                     
 
                         <div class="mb-4">
-                            <label for="edit-notes" class="mb-1 text-xl block">Edit Note</label>
+                            <label for="edit-notes" class="mb-1 text-xl block">Edit Note <small>(Your information)</small></label>
                             <div v-if="form.errors.notes" class="bg-red-500 text-white w-3/4 py-1 px-4 rounded-sm mb-2"><p class="mb-0">{{ form.errors.notes }}</p></div>
                             <textarea  v-model="form.notes" class="w-full" rows="10">{{ form.notes }}</textarea>
                         </div>
 
-                        <button @click.prevent="submitPayment" class="btn btn-warning">
-                            Send Payment
+                        <button @click.prevent="submitPayment" class="btn btn-info">
+                            Create Payment
                         </button>
 
                 </div>

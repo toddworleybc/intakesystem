@@ -16,6 +16,16 @@
 </head>
 <body>
 
+    @if (isset($view))
+    
+        <div>
+            <h2>Subject: Welcome To Evergreen By Design</h2>
+        </div>
+
+    @endif
+    
+
+
     <section>
         <p style="font-size: 20px">Thank you {{ $client->name }} for choosing Evergreen By Design!</p>
         <p>Follow these steps to start your services</p>
@@ -26,7 +36,7 @@
 
         <div style="border-bottom: 2px solid #cbd5e1;">
             <h4>First: Review and Sign Service Agreement</h4>
-            <p>by clicking this link: https://www.signwell.com/new_doc/vmVdowuqk8YXTrXK/</p>
+            <p>by clicking this link: {{ env("WEBSITE_AGREEMENT_LINK") }}</p>
         </div>
 
         <div style="border-bottom: 2px solid #cbd5e1;">
@@ -43,11 +53,11 @@
                     <p style="font-style: italic;">Note: Payment with credit card adds a 3.4% processing fee.</p>
                     @endif
 
-                    <p>Deposit Amount: ${{ $payment->amount }}</p>
+                    <p>Deposit Amount: {{ $payment->amount }}</p>
 
-                    <p>3.4% Processing Fee:  ${{ $payment->processing_fee ? $payment->processing_fee : "0.00 free with " . $payment->payment_method }}</p>
+                    <p>3.4% Processing Fee:  {{ $payment->processing_fee ? $payment->processing_fee : "$0.00 free with " . $payment->payment_method }}</p>
 
-                    <p style="font-weight: bold;">Total Payment Amount: ${{ $payment->card_amount ? $payment->card_amount : $payment->amount }}</p>
+                    <p style="font-weight: bold;">Total Payment Amount: {{ $payment->card_amount ? $payment->card_amount : $payment->amount }}</p>
 
                     @if ($payment->payment_method === 'Credit Card') 
                     <p style="margin-bottom: 8px;">Click Link To Pay With Card: {{ $payment->payment_link }}</p>

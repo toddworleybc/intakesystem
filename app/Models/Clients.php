@@ -21,8 +21,10 @@ class Clients extends Model
         "details",
         "domains",
         "create_quote",
+        "pro_emails",
         "hosting",
         "welcome_email_sent",
+        "welcome_email_sent_count",
         "deposit",
         "payment_option",
         "status"

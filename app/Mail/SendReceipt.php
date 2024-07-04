@@ -3,20 +3,17 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-
-
-class SendPayment extends Mailable
+class SendReceipt extends Mailable
 {
     use Queueable, SerializesModels;
 
     public $payment;
-   
-   
 
 
     /**
@@ -28,6 +25,7 @@ class SendPayment extends Mailable
 
         $this->payment = $payment;
 
+
     }
 
     /**
@@ -35,11 +33,8 @@ class SendPayment extends Mailable
      */
     public function envelope(): Envelope
     {
-
-        $invoiceId = $this->payment->invoice_id;
-
         return new Envelope(
-            subject: "EBD Payment Request - Invoice $invoiceId",
+            subject: 'EBD - Thank you for your payment',
         );
     }
 
@@ -48,9 +43,8 @@ class SendPayment extends Mailable
      */
     public function content(): Content
     {
-
         return new Content(
-            view: 'Emails.sendPayment',
+            view: 'Emails.receiptSend',
         );
     }
 

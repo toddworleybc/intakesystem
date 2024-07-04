@@ -16,10 +16,36 @@
 
     const form = useForm(`EditClient:${client.id}`, client);
 
+    // add empty domain
+    function addDomain() {
+        form.domains.push("");
+    }
+
+    function removeDomain(i) {
+        form.domains.splice(i, 1);
+    }
+
+      // add empty domain
+      function addProEmail() {
+        form.pro_emails.push("");
+    }
+
+    function removeProEmail(i) {
+        form.pro_emails.splice(i, 1);
+    }
+
     
 // submits the update client form
 
     function submitForm() {
+
+        if(form.status === 'cancelled') {
+
+            const cancelClient = confirm(`Are you sure you want to cancel ${client.name}? This will void all pending payments!`);
+
+            if(!cancelClient) return; 
+        }
+
        const $url = route('clients.update', client.id);
 
         form.patch($url, {
@@ -121,17 +147,26 @@
                             <option value="Active">Active</option>
                         </select>
                     </div>
+                    <div class="mb-8">
+                            <label class="mb-1 text-xl block" for="pro-emails">Professional Email(s)</label>
+                        
+                            <div v-if="form.errors.pro_emails" class="bg-red-500 text-white w-3/4 py-1 px-4 rounded-sm mb-2"><p class="mb-0">{{ form.errors.pro_emails }}</p></div>
 
+                            <div v-for="(pro_emails, i) in form.pro_emails" :key="i" class="flex space-x-4 mb-6">
+                                <input  v-model="form.pro_emails[i]" class="block rounded-lg w-3/4 border-gray-400 shadow-gray-200 shadow-md py-2" type="email"  href="#"name="pro_emails" id="pro_emails">
+                                <span @click.prevent="removeProEmail(i)" class="self-center text-blue-600 cursor-pointer hover:text-blue-200 active:text-gray-400">remove</span>
+                            </div>
+                            
+
+                            <button @click.prevent="addProEmail" class="btn btn-info">
+                                Add Pro.Email
+                            </button>
+                        
+                        </div>
                 </div>
                 <!-- #/left side  -->
 
                 <div id="right-side" class="w-1/2">
-
-                    <div class="flex justify-between items-center border-b-2 border-gray-400 mb-4">
-                        <h3>Initial Quote: ${{ client.quote }}</h3>
-                        <a href="#" @click.prevent="deleteClient(client)">Delete Client</a>
-                    </div>
-
 
                     <div class="mb-8">
                         <label class="mb-1 text-xl block" for="status">Status</label>
@@ -151,6 +186,23 @@
                             <option value="Zelle">Zelle</option>
                             <option value="Venmo">Venmo</option>
                         </select>
+                    </div>
+
+                    <div class="mb-8">
+                        <label class="mb-1 text-xl block" for="domains">Domain(s)</label>
+                      
+                        <div v-if="form.errors.domains" class="bg-red-500 text-white w-3/4 py-1 px-4 rounded-sm mb-2"><p class="mb-0">{{ form.errors.domains }}</p></div>
+
+                        <div v-for="(domains, i) in form.domains" :key="i" class="flex space-x-4 mb-6">
+                            <input  v-model="form.domains[i]" class="block rounded-lg w-3/4 border-gray-400 shadow-gray-200 shadow-md py-2" type="text"  href="#"name="domains" id="domains">
+                            <span @click.prevent="removeDomain(i)" class="self-center text-blue-600 cursor-pointer hover:text-blue-200 active:text-gray-400">remove</span>
+                        </div>
+                        
+
+                        <button @click.prevent="addDomain" class="btn btn-info">
+                            Add Domain
+                        </button>
+                        
                     </div>
 
 

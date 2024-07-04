@@ -17,6 +17,7 @@ class Payment extends Model
         'amount',
         'for',
         'initial_payment',
+        'payment_sent_count',
         'status',
         'invoice_id'
     ];
