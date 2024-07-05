@@ -154,6 +154,7 @@ class PaymentController extends Controller
         $payment->payment_sent_count = json_encode([]);
         $payment->receipt_sent_dates = json_encode([]);
 
+// format card payment
         if($payment->payment_method === "Credit Card") {
             $payment->card_amount =  Number::format($payment->card_amount, precision: 2);
             $payment->processing_fee =  Number::format($payment->processing_fee, precision: 2);
@@ -260,7 +261,7 @@ class PaymentController extends Controller
     private function CreatePayment($order) {
 
 
-        $stripe = new \Stripe\StripeClient(config('services.stripe.key'));
+        $stripe = new \Stripe\StripeClient(config('services.stripe.test'));
 
 
 
@@ -283,7 +284,7 @@ class PaymentController extends Controller
            
               $service_fee = $stripe->prices->create([
                 'currency' => 'usd',
-                'unit_amount' => $order['amount'] * 100,
+                'unit_amount' => (int) $order['amount'],
                 'product_data' => [
                     'name' => "{$order['for']}. {$order['name']}-(invoice_id: {$order['invoiceId']})",
                 ],

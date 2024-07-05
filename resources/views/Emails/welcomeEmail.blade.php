@@ -36,7 +36,7 @@
 
         <div style="border-bottom: 2px solid #cbd5e1;">
             <h4>First: Review and Sign Service Agreement</h4>
-            <p>by clicking this link: {{ env("WEBSITE_AGREEMENT_LINK") }}</p>
+            <p>by clicking this link: <a href="{{ config('services.signwell.link') }}">{{ config('services.signwell.link') }}</a></p>
         </div>
 
         <div style="border-bottom: 2px solid #cbd5e1;">

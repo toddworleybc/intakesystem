@@ -44,11 +44,6 @@ use App\Models\Payment;
     })->name('archives');
 
 
-// Emails View TESTING
-
-// Route::get('email-test', function() {
-//     return view('Emails/welcomeEmail');
-// });
 
 
    

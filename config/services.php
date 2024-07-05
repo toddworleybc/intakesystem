@@ -34,6 +34,10 @@ return [
     'stripe' => [
         'key' => env('STRIPE_SECRET_KEY'),
         'test' => env('STRIPE_TEST_SECRET_KEY'),
+    ],
+
+    'signwell' => [
+        'link' => env('WEBSITE_AGREEMENT_LINK')
     ]
 
 ];

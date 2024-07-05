@@ -196,15 +196,21 @@ class ClientsController extends Controller
 
         }//
 
+        // dd($client);
+
 // save client
         $client->update($request->all());
 
 // Sets initial payment to pending if client is pending
         if($client->status === 'pending') {
 
-            $payment = $payments->find($client->payments)->where('initial_payment', 1);
+            $payment = $payments->find($client->payments)->where('initial_payment', 1)[0];
+
+           
 
             $payment->status = 'pending';
+
+           
 
             $payment->save();
         }
