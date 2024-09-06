@@ -126,7 +126,8 @@
 
     function receiptSentDates() {
        
-        return payment.receipt_sent_dates.slice().reverse();
+        // return payment.receipt_sent_dates.slice().reverse();
+        return [];
     }//
 
 
@@ -241,8 +242,8 @@
                         
                         
                         <div class="mt-2">
-                            <p>Created: {{  payment.createdAt }}</p>
-                            <p>Updated: {{  payment.updatedAt  }}</p>
+                            <p>Created: {{  payment.created_at }}</p>
+                            <p>Updated: {{  payment.updated_at  }}</p>
                         </div>
                     </div>
                     <div v-if="receiptSentDates().length === 0">

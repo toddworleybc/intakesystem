@@ -21,7 +21,7 @@ use App\Models\Payment;
 
     Route::resource('payments', PaymentController::class);
 
-    Route::post('/create-new-payment', [PaymentController::class,'createNewPayment'])->name('payments.create.new');
+    // Route::post('/create-new-payment', [PaymentController::class,'createNewPayment'])->name('payments.create.new');
 
 // Email Routes---------------------------/
     Route::post('/welcome-email', [SendEmailsController::class,'welcomeEmailSend'])->name('welcome.email.send');

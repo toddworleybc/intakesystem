@@ -5,8 +5,6 @@ use Illuminate\Support\Str;
 
 use App\Models\Clients;
 use App\Models\Payment;
-use App\Http\Requests\StoreClientsRequest;
-use App\Http\Requests\UpdateClientsRequest;
 use App\Http\Controllers\PaymentController;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
@@ -16,6 +14,11 @@ use Illuminate\Support\Arr;
 
 class ClientsController extends Controller
 {
+
+
+   
+
+
     /**
      * Display a listing of the resource.
      */
@@ -46,96 +49,143 @@ class ClientsController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreClientsRequest $request, PaymentController $payment)
-    {
-        //
+    // public function store(StoreClientsRequest $request, PaymentController $payment)
+    // {
+    //     //
         
         
 
-        if($clientStore = $request->validated()) {
+    //     if($clientStore = $request->validated()) {
 
-            $clientStore['welcome_email_sent_count'] = json_encode([]);
+    //         $clientStore['welcome_email_sent_count'] = json_encode([]);
             
             
-    // create request deposit
-        $clientStore['deposit'] = Number::format(($request->quote / 2), precision: 2);
+    // // create request deposit
+    //     $clientStore['deposit'] = Number::format(($request->quote / 2), precision: 2);
 
-        $clientStore['deposit'] = preg_replace('/,/', '', $clientStore['deposit']);
+    //     $clientStore['deposit'] = preg_replace('/,/', '', $clientStore['deposit']);
        
 
             
-        $clientStore['quote'] = $clientStore['quote'] ? $clientStore['quote'] : '0.00';
+    //     $clientStore['quote'] = $clientStore['quote'] ? $clientStore['quote'] : '0.00';
 
-    // format domain to json
-            $clientStore['domains'] = json_encode($request->domains);
+    // // format domain to json
+    //         $clientStore['domains'] = json_encode($request->domains);
 
-    // format pro_emails to json
+    // // format pro_emails to json
    
-            $clientStore['pro_emails'] = json_encode($request->pro_emails);
+    //         $clientStore['pro_emails'] = json_encode($request->pro_emails);
            
-    // create client
-            $client = Clients::create($clientStore);
+    // // create client
+    //         $client = Clients::create($clientStore);
 
 
-    // create an initial quote
-        if($client->create_quote) {
+    // // create an initial quote
+    //     if($client->create_quote) {
 
-            $order = [
-                'client' => $client,
-                'amount' => $client->deposit,
-                'notes' => 'Initial deposit for services',
-                'frequency' => 'one_time',
-                'receipt_sent_dates' => []
-            ];
+    //         $order = [
+    //             'client' => $client,
+    //             'amount' => $client->deposit,
+    //             'notes' => 'Initial deposit for services',
+    //             'frequency' => 'one_time',
+    //             'receipt_sent_dates' => []
+    //         ];
 
-    // create initial payment  
-            $payment->store($order, true);
+    // // create initial payment  
+    //         $payment->store($order, true);
 
-        } // create quote
+    //     } // create quote
         
 
-        return to_route('clients.show', $client)->with('success', "Client has been created!");
+    //     return to_route('clients.show', $client)->with('success', "Client has been created!");
 
-        }
+    //     }
+
+    // }
+
+    public function store(Request $request)
+    {
+        //
+
+        // vars
+            $newClient = new Clients();
+            $client = $request->all();
+            $name = $request->name;
+            $createdStatus = null;
+            $message = null;
+            
+        // create client
+            $createdClient = $newClient->create($client);
+
+        // check and set message and status
+            if($createdClient) {
+                $createdStatus = 'success';
+                $message = "$name was successfully created!";
+            }  else {
+                $createdStatus = 'error';
+                $message = "Failed to create client $name";
+            }
+
+        // return to route
+         return to_route("clients.show", $createdClient)->with(
+              $createdStatus, 
+              $message
+        );
 
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Clients $clients, $id, Request $request)
-    {   
-
+    // public function show(Clients $clients, $id, Request $request)
+    // {   
        
-       
-        $client = Clients::find($id);
+    //     $client = Clients::find($id);
 
 
-    // controls the message banner
-        $client['created'] = $request->query("client_created") ? true : false;
-        $client['updated'] = $request->query("client_updated") ? true : false;
+    // // controls the message banner
+    //     $client['created'] = $request->query("client_created") ? true : false;
+    //     $client['updated'] = $request->query("client_updated") ? true : false;
 
-    // sets date format for display
-        $client["createdAt"] = $client->created_at->format("F jS, Y, g:i a");
-        $client["updatedAt"] = $client->updated_at->format("F jS, Y, g:i a");
+    // // sets date format for display
+    //     $client["createdAt"] = $client->created_at->format("F jS, Y, g:i a");
+    //     $client["updatedAt"] = $client->updated_at->format("F jS, Y, g:i a");
 
 
-    // Reverse payments for table display
-        $payments = $client->payments->reverse()->values();
+    // // Reverse payments for table display
+    //     $payments = $client->payments->reverse()->values();
         
-    // domains back to array format
-        $client["domains"] = json_decode($client["domains"]);
+    // // domains back to array format
+    //     $client["domains"] = json_decode($client["domains"]);
 
-    // pro_emails back to array format
-        $client["pro_emails"] = json_decode($client['pro_emails']);
-        $client["welcome_email_sent_count"] = json_decode($client["welcome_email_sent_count"]);
+    // // pro_emails back to array format
+    //     $client["pro_emails"] = json_decode($client['pro_emails']);
+    //     $client["welcome_email_sent_count"] = json_decode($client["welcome_email_sent_count"]);
 
             
-        return Inertia::render("Clients/Show", [
-          'client' =>  $client,
-          'payments' => $payments
-        ], );
+    //     return Inertia::render("Clients/Show", [
+    //       'client' =>  $client,
+    //       'payments' => $payments
+    //     ], );
 
+    // }
+
+
+    public function show(Clients $clients, $id)
+    {   
+        
+        $client = $clients->find($id);
+        $payments = $client->payments->all();
+
+
+        
+
+
+        return Inertia::render('Clients/Show', [
+            'client' => $client,
+            'payments' => $payments
+        ]);
+       
     }
 
     /**
@@ -249,6 +299,9 @@ class ClientsController extends Controller
        return to_route("clients.index")->with('success', "Client $client->name was deleted!");
 
     }
+
+
+   
     
 }
 

@@ -17,22 +17,13 @@
         email: null,
         phone: null,
         location: null,
-        quote: null,
         domains:[],
         pro_emails: [],
-        create_quote: true,
-        welcome_email_sent: false,
-        hosting: "Self Hosting",
+        welcome_email_sent_count: [],
         payment_option: "Credit Card",
         details: null
     });
 
-
-
-// set quote input
-    function setQuoteInput(e) {
-        form.quote = inputCurrencyFormat(e.target.value);
-    }
 
 
 // add empty domain
@@ -121,16 +112,7 @@
                     </div>
 
                     <div>
-                        <h2>Hosting Services</h2>
-                        <div class="mb-8">
-                            <label class="mb-1 text-xl block" for="hosting">Hosting</label>
-                            <div v-if="form.errors.hosting" class="bg-red-500 text-white w-3/4 py-1 px-4 rounded-sm mb-2"><p class="mb-0">{{ form.errors.hosting }}</p></div>
-                            <select v-model="form.hosting" form="client-create" class="block rounded-lg w-3/4 border-gray-400 shadow-gray-200 shadow-md py-2" name="hosting" id="hosting">
-                                <option value="Self Hosting">Self Hosting</option>
-                                <option value="Pending">Pending</option>
-                                <option value="Active">Active</option>
-                            </select>
-                        </div>
+                       
                         <div class="mb-8">
                             <label class="mb-1 text-xl block" for="pro-emails">Professional Email(s)</label>
                         
@@ -153,31 +135,7 @@
                 </div>
                 <!-- #/left side  -->
 
-                <div id="right-side" class="w-1/2">
-
-                    <div class="mb-8 border-b-2 pb-4 border-gray-400">
-                        <div class="flex items-center space-x-4">
-                            <h3 class="mb-2 text-xl" >Create Quote</h3>
-                            <input type="checkbox" class="rounded-full -mt-2" v-model="form.create_quote">
-                        </div>
-                            <div v-if="form.create_quote">
-                                <div v-if="form.errors.quote" class="bg-red-500 text-white w-3/4 py-1 px-4 rounded-sm mb-2"><p class="mb-0">{{ form.errors.quote }}</p></div>
-                            <div class="space-y-2">
-                                <div class="space-x-4">
-                                    <input @change.prevent="setQuoteInput" :value="form.quote" class="block rounded-lg w-3/4 border-gray-400 shadow-gray-200 shadow-md py-2" type="text" name="quote" id="quote">
-                                </div>
-                            </div>
-                            <div class="mt-4">
-                                <h4 class="mb-2">Deposit Amount: {{ currencyFormater(form.quote / 2) }}</h4>
-                                <div class="mb-2">
-                                    <h4 v-if="form.payment_option === 'Credit Card'">Processing Fee: {{ currencyFormater((form.quote / 2) * .034) }}</h4>
-                                </div>
-                                
-                                <h4 class="font-semibold">Quote Amount: {{ currencyFormater(form.quote) }}</h4>
-                            </div>
-                        </div>
-                    </div>
-                    
+                <div id="right-side" class="w-1/2">  
 
                     <div class="mb-8">
                         <h3 class="mb-2 text-xl" >Payment Option</h3>
