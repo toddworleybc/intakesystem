@@ -24,11 +24,24 @@ class PaymentController extends Controller
      */
     public function index()
     {
-        //
+        // 
 
-        return Inertia::render('Payments/Read', [
+        $payments = Payment::all();
+        $payments_created_at = [];
+
+        foreach($payments as $payment) {
+            $payments_created_at[] = [
+                'id' => $payment->id,
+                'created_date' => $payment->created_at
+            ];
+        }
+
+
+
+        return inertia('Payments/Read', [
             'payments' => Payment::all(),
-            'clients' => Clients::all()
+            'clients' => Clients::all(),
+            'payments_created_at' => $payments_created_at
         ]);
 
 
@@ -42,145 +55,36 @@ class PaymentController extends Controller
         //
 
         $client = Clients::find($request->query("clientId"));
+        $client['payments'] = $client->payments;
+       
+        
 
         return Inertia::render("Payments/Create", [
             'client' => $client
         ]);
     }
 
-
-
-    // public function createNewPayment(Request $request) {
-
-    //         // store or 
-    //             $payment = $this->store($request);
-
-
-    //     return to_route('payments.show', $payment)->with('success', 'Payment created');
-              
-
-    // }//#===
-
-    
-
    
 
     /**
      * Store a newly created resource in storage.
      */
-//     public function store($order, $initial_payment = false)
-//     {
-//         // 
 
-//     // create new payment
-//         $payment = new Payment();
-
-      
-//         $client = $order['client'];
-      
-
-//         $order['for'] = $initial_payment ? "50% Deposit for EBD Website and Graphic Design Services" : $order['for'];
-        
-
-// // set default for payment if for is not filed
-//         $order['for'] = $order['for'] ? $order['for'] : "EBD Website and Graphic Services";
-
-        
-
-//     // get client if not initial payment
-//         if($initial_payment === false) $client = Clients::find($client['id']);
-
-
-
-//     // create payment id
-//         $payment->invoice_id = Str::of(Str::ulid())->substr(16);
-
-        
-
-//     // set payment "for"
-//         $payment->for = $initial_payment ? "EBD 50% Initial Service Deposit" : $order->for;
-
-//     // if recurring payment is created use Credit Card payment only!
-//         if($order['frequency'] === 'recurring') $client->payment_option = "Credit Card";
-            
-
-//     // credit card payment
-//         if($client->payment_option === "Credit Card") {
-
-//         // create processing fee 
-//             $processing_fee = $order['amount'] * .034;
-
-
-//         // set payment fields
-//             $payment->processing_fee  = $processing_fee;
-//             $payment->card_amount = $order['amount'] + $processing_fee;
-            
-//             $productOrder = [
-//                 'name' => $client->name, 
-//                 'amount' => $payment->card_amount, 
-//                 'for' => $payment->for,
-//                 'frequency' => $initial_payment ? 'one_time' : $order['frequency'], 
-//                 'invoiceId' => $payment->invoice_id
-//             ];
-
-    
-
-//     // create payment "product" obj 
-//            $product = $this->CreatePayment($productOrder);
-
-        
-
-//         // store payment link
-//            $payment->payment_link = $product->url;
-
-//         }// end if;
-       
-
-//     // store the rest of payment data
-       
-//         $payment->payment_method = $client->payment_option;
-//         $payment->amount = $order['amount'];
-//         $payment->notes = $order['notes'];
-//         $payment->initial_payment = $initial_payment;
-//         $payment->frequency = $order['frequency'];
-//         $payment->payment_sent_count = json_encode([]);
-//         $payment->receipt_sent_dates = json_encode([]);
-
-// // format card payment
-//         if($payment->payment_method === "Credit Card") {
-//             $payment->card_amount =  Number::format($payment->card_amount, precision: 2);
-//             $payment->processing_fee =  Number::format($payment->processing_fee, precision: 2);
-
-//            $payment->card_amount = preg_replace('/,/', "", $payment->card_amount);
-//            $payment->processing_fee = preg_replace('/,/', "", $payment->processing_fee);
-    
-//         }
-
-        
-
-
-// // save payment
-//         $client->payments()->save($payment);
-
-
-//     // save payment
-//         return $payment;
-            
-//     }
 
     public function store(Request $request)
     {
         // 
-
+      
         $client = Clients::find($request->client["id"]);
         $message = null;
         $paymentCreatedStatus = null;
+        $recurringPayment = $request['frequency'] === "recurring" ? true : false;
 
 
 // add additional request information  
-        $request["payment_method"] = $client["payment_option"];
+        $request["payment_method"] = $recurringPayment ? 'Credit Card' : $client["payment_option"];
         $request["for"] = $request["for"] ? $request["for"] : "EBD Online Marketing Services";
-        $requesto['notes'] = $request['notes'] ? $request["notes"] : null;
+        $request['notes'] = $request['notes'] ? $request["notes"] : null;
         $request["invoice_id"] = Str::of(Str::ulid())->substr(16);
         $request["status"] = 'pending';
         $request["payment_sent_count"] = [];
@@ -188,7 +92,7 @@ class PaymentController extends Controller
 
         
     // create Credit Card Link
-        if($client["payment_option"] === "Credit Card") {
+        if($client["payment_option"] === "Credit Card" || $recurringPayment) {
 
         // add processing fee
             $request["processing_fee"] = Number::format(($request->amount * config('services.stripe.processing_fee')), precision: 2);
@@ -206,17 +110,20 @@ class PaymentController extends Controller
         $paymentCreated = $client->payments()->create($request->all());
 
 
-        if($paymentCreated) {
-            $paymentCreatedStatus = 'success';
-            $message = "Payment for {$client["name"]} has been created";
-        } else {
-            $paymentCreatedStatus = 'error';
-            $message = "Failed to create payment for {$client["name"]}";
-        }
+    // set payment created status message
+        $paymentCreatedStatus = $paymentCreated ?
+        [
+            'status' => 'success',
+            'type' => 'safe',
+            'message' => "Payment for {$client["name"]} has been created"
+        ] :
+        [
+            'status' => 'error',
+            'type' => 'danger',
+            'message' => "Failed to create payment for {$client["name"]}"
+        ];
 
-
-        return to_route("payments.show", $paymentCreated)->with($paymentCreatedStatus, $message);
-    
+        return to_route("payments.show", $paymentCreated)->with('message', $paymentCreatedStatus);
     }
 
     /**
@@ -228,18 +135,20 @@ class PaymentController extends Controller
       
         $payment = Payment::find($id);
         $payment['client'] = $payment->client;
-
-        // $payment["createdAt"] = $payment->created_at->format("F jS, Y, g:i a");
-        // $payment["updatedAt"] = $payment->updated_at->format("F jS, Y, g:i a");
-
-
-        // $payment["payment_sent_count"] = json_decode($payment->payment_sent_count);
+        $payment['client_payments'] = $payment['client']->payments;
+        $created_at = $payment->created_at;
+        $updated_at = $payment->updated_at;
         
-        // $payment["receipt_sent_dates"] = json_decode($payment->receipt_sent_dates);
-
-        return Inertia::render("Payments/Show", [
-            'payment' => $payment
+        // dd($payment);
+        return inertia("Payments/Show", [
+            'payment' => $payment,
+            'created_at' => $created_at,
+            'updated_at' => $updated_at
         ]);
+
+        // return Inertia::render("Payments/Show", [
+        //     'payment' => $payment
+        // ]);
     }
 
     /**
@@ -253,43 +162,36 @@ class PaymentController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Payment $payment, Clients $clients)
+    public function update(Request $request, $id)
     {
         //
-       
-       
-        $payment = $payment->find($request->id);
+      
+        $payment = Payment::find($id);
 
         $payment->status = $request->status;
         $payment->notes = $request->notes;
+        $payment->payment_welcome_email = $request->payment_welcome_email;
 
-        $payment->save();
+      
 
-// activate client after intial payment
-        if($payment->initial_payment && $payment->status === 'paid') {
-  
-            $client = $clients::find($payment->client->id);
-
-            $client->status = 'active';
-
-            $client->save();
-
-        }
-
-        if($payment->initial_payment && $payment->status === 'void') {
-            $client = $clients->find($payment->client->id);
-            $client->status = 'cancelled';
-            $client->save();
-        }
-
-        
-
+        $paymentSaved = $payment->save();
 
         $payment['client'] = $payment->client;
 
-        
-        
-        return to_route('payments.show', $payment)->with('success', 'Payment has been updated!');
+        $paymentUpdateStatus = $paymentSaved ?
+        [
+            'status' => 'success',
+            'type' => 'safe',
+            'message' => "Payment for {$payment->client->name} has been updated"
+        ] :
+        [
+            'status' => 'error',
+            'type' => 'danger',
+            'message' => "Failed to update payment for {$payment->client->name}"
+        ];
+
+        return to_route("payments.show", $id)->with('message', $paymentUpdateStatus);
+
     }
 
     /**

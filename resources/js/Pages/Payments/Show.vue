@@ -2,17 +2,20 @@
     import MainLayout from '@/Layouts/MainLayout.vue';
     import BtnComponent from '@/Components/Button.vue'; 
     import MessageBannerComponent from '@/Components/messageBanner.vue';
-    import { computed, watch, ref } from 'vue';
+    import messageBannerControl from '@/Utilities/messageBannerControl';
+    import { computed, onBeforeMount, ref, onMounted, reactive } from 'vue';
     import { router, usePage, useForm } from '@inertiajs/vue3';
     import Loader from '@/Utilities/loader.js';
     import currencyFormater from '@/Utilities/currencyFormater';
-
+    
 
     const payment = usePage().props.payment;
     const enableNoteEditing = ref(false);
-    
-
+    const message = usePage().props.flash.message;
     const form = useForm("PaymentStatus", payment);
+    const welcomeEmailPayment = ref(null);
+  
+    
 
 
     function receiptSend() {
@@ -34,6 +37,37 @@
            preserveState: false
 
         } );
+
+    }//
+
+    function cancelSubscription() {
+
+        form.status = 'void';
+
+
+        if(form.status === 'void') {
+            const confirmVoidPayment = confirm('Are you sure you want to cancel this subscription. It cannot be edited once cancelled!');
+            
+            if(!confirmVoidPayment) return;
+        }
+        
+
+
+        form.patch(route('payments.update', payment.id), {
+
+            onStart : function() {
+                Loader.action = "Updating Payment";
+                Loader.isLoading = true;
+           },
+
+           onFinish : function() {
+                Loader.isLoading = false;
+           },
+           preserveState: false
+
+        });
+
+
 
     }//
 
@@ -126,8 +160,8 @@
 
     function receiptSentDates() {
        
-        // return payment.receipt_sent_dates.slice().reverse();
-        return [];
+        return payment.receipt_sent_dates.slice().reverse();
+     
     }//
 
 
@@ -147,6 +181,68 @@
         });
     }
 
+    function copyPaymentInvoiceId() {
+        var copyText = document.getElementById("copy-invoice");
+
+  // Select the text field
+        copyText.select();
+        copyText.setSelectionRange(0, 99999); // For mobile devices
+
+        // Copy the text inside the text field
+        navigator.clipboard.writeText(copyText.value);
+
+         
+                messageBannerControl.status = 'success';
+                messageBannerControl.type = 'safe';
+                messageBannerControl.message = "Invoice has been copied!";
+    
+    }//==
+
+
+    function hasWelcomeEmailPaymentExists() {
+
+        const payments = payment.client_payments;
+        let paymentWelcomeEmailExists = false;
+       
+
+        payments.forEach(payment => {
+
+            if(payment.payment_welcome_email) {
+
+                paymentWelcomeEmailExists = true;
+                welcomeEmailPayment.value = payment;
+
+            }
+        });
+
+
+        // shows/hides the attach an email option on create payment
+        return paymentWelcomeEmailExists ? true : false;
+
+    }//==
+
+
+    function paymentUsedForWelcomeEmail() {
+        
+        if(welcomeEmailPayment) {
+            if(welcomeEmailPayment.value.id === payment.id) {
+                return true;
+            }
+        }
+    }
+  
+    onBeforeMount( () => {
+        const created_at = usePage().props.created_at;
+        const updated_at = usePage().props.updated_at;
+        payment['created_at'] =  created_at;
+        payment['updated_at'] = updated_at;
+    } );
+   
+
+    onMounted( () => {
+        if(message) messageBannerControl.display(message);
+    } );
+
 </script>
 
 
@@ -162,9 +258,7 @@
         </div>
 
 
-        <MessageBannerComponent :show="$page.props.flash.success" type="safe">
-            {{ $page.props.flash.success }}
-        </MessageBannerComponent>
+        <MessageBannerComponent :show="messageBannerControl" />
 
 
         <div class="border border-gray-200 px-4 py-10 rounded-sm shadow-lg relative">
@@ -172,17 +266,27 @@
             
 
             <div class="border-b-2 border-gray-500 pb-2 mb-2 flex justify-between items-end">
-                <div class="text-lg bg-gray-500 text-white inline-block py-2 px-4 rounded">
-                <p class="mb-0">Payment Amount: {{ payment.payment_method === 'Credit Card' ? currencyFormater(payment.card_amount) : currencyFormater(payment.amount) }}</p>
-            </div>
+                <div>
+                    <div class="text-lg bg-gray-500 text-white inline-block py-2 px-4 rounded">
+                        <p class="mb-0">Payment Amount: {{ payment.payment_method === 'Credit Card' ? currencyFormater(payment.card_amount) : currencyFormater(payment.amount) }}</p>
+                    </div>
+                    <div>
+                        <div :class="statusClassObj" class="text-sm mt-4 text-center text-white py-1 px-2 rounded inline-block">
+                            Status: <span class="capitalize">{{ payment.status }}</span>
+                        </div>
+                    </div>
+                    
+                </div>
+                
 
                 <div>
                     <h3 class="mb-4">Payment For: {{ payment.for }}</h3>
                     <div class="flex items-center justify-center space-x-4">
-                        <span class="bg-green-700 text-sm text-white py-1 px-2 rounded">Invoice Id: {{ payment.invoice_id }}</span>
-                        <span :class="statusClassObj" class="text-sm text-white py-1 px-2 rounded">
-                            Status: <span class="capitalize">{{ payment.status }}</span>
-                        </span>
+                        <div class="bg-green-700  text-white py-1 px-2 rounded">
+                            <label  for="copy-invoice">Invoice Id: </label>
+                            <input @click.prevent="copyPaymentInvoiceId" type="text" id="copy-invoice" style="width: 108px;" class="border-none p-0 bg-transparent cursor-pointer" :value="payment.invoice_id">
+                        </div>
+                        
                     </div>
                 </div>
                 
@@ -195,16 +299,16 @@
                     </div>
 
 
-                    <BtnComponent v-else-if="paymentDatesSent().length === 0"  link="#" @click.prevent="sendPayment" >
+                    <BtnComponent v-else-if="paymentDatesSent().length === 0 && !payment.payment_welcome_email"  link="#" @click.prevent="sendPayment" >
                        Send Payment
                     </BtnComponent>
 
-                    <BtnComponent v-else-if="paymentDatesSent().length !== 0" type="danger"  link="#" @click.prevent="sendPayment" >
+                    <BtnComponent v-else-if="paymentDatesSent().length !== 0 && !payment.payment_welcome_email" type="danger"  link="#" @click.prevent="sendPayment" >
                        Resend Payment
                     </BtnComponent>
 
                     <div v-else class="bg-yellow-500 text-white py-2 px-4 rounded">
-                        Initial Payment Required
+                       Client Send Welcome Email
                     </div>
 
                 </div>
@@ -215,12 +319,24 @@
                 
             </div>
 
-            <div v-if="payment.status === 'pending'" class="mb-10 flex justify-end">
-                <a @click.prevent="viewPaymentEmail" href="#">View Payment Email</a>
+            <div v-if="payment.status === 'pending'" class="mb-10 flex justify-between">
+                <div v-if="!hasWelcomeEmailPaymentExists() || paymentUsedForWelcomeEmail()">
+                    <input type="checkbox" class="mr-4" v-model="form.payment_welcome_email"  id="payment_welcome_email">
+                    <label for="payment_welcome_email">Attach to welcome email</label>
+                </div>
+                <div v-else></div>
+                <div v-if="!payment.payment_welcome_email" class="align-end">
+                    <a @click.prevent="viewPaymentEmail" href="#">View Payment Email</a>
+                </div>
+                
             </div>
-            <div v-else class="mb-10 flex justify-end">
+            
+            <div v-else class="mb-10 flex justify-between">
+                <span v-if="payment.payment_welcome_email" class="bg-yellow-600 text-white py-1 px-2 round-sm">Welcome Email Payment</span>
+                <span v-else></span>
                 <a @click.prevent="viewReceiptEmail" href="#">View Receipt Email</a>
             </div>
+
 
             <div id="client-info-container" class="flex">
 
@@ -241,7 +357,8 @@
                        
                         
                         
-                        <div class="mt-2">
+                        <div class="mt-2 border-t border-gray-400">
+                            <h3 class="my-4">Created and Updated</h3>
                             <p>Created: {{  payment.created_at }}</p>
                             <p>Updated: {{  payment.updated_at  }}</p>
                         </div>
@@ -257,9 +374,9 @@
                         <h3 class="my-4">Receipt Sent Count: {{ receiptSentDates().length }}</h3>
 
 
-                        <p v-if="receiptSentDates().length !== 0" v-for="(dateSent, i) in receiptSentDates()" :key="i">Date Sent: {{ dateSent }}</p>
+                        <p class="border-b-2 pb-6 inline-block" v-if="receiptSentDates().length !== 0" v-for="(dateSent, i) in receiptSentDates()" :key="i">Date Sent: {{ dateSent }}</p>
                         <p v-else class="bg-yellow-500 text-white inline-block text-center py-2 px-4 mt-6 border-b-2 border-gray">Receipt Not Sent Yet</p>
-
+                       
                         <h3 class="my-4">Payment Sent Dates {{ paymentDatesSent().length }}</h3>
 
                         <p v-if="paymentDatesSent().length !== 0" v-for="(dateSent, i) in paymentDatesSent()" :key="i">Date Sent: {{ dateSent }}</p>
@@ -292,9 +409,17 @@
                                 <p>{{ payment.updatedAt }}</p>
                             </div>
                             <div v-else>
-                                <p  class="bg-green-500 text-white inline-block py2 px-4">
+                                <p v-if="payment.frequency !== 'recurring'"  class="bg-green-500 text-white inline-block py2 px-4">
                                     Payment Paid
                                 </p>
+                                <div v-else>
+                                    <p v-if="payment.frequency !== 'recurring'"  class="bg-green-500 text-white inline-block py2 px-4">
+                                        Payment Paid
+                                    </p>
+                                    <button v-if="payment.frequency === 'recurring'" class="btn btn-danger mt-4" @click.prevent="cancelSubscription">
+                                    Cancel Payment
+                                    </button>
+                                </div>
                                 <p>{{ payment.updatedAt }}</p>
                             </div>
                                 <p class="mt-4"><span>Frequency:</span> {{ payment.frequency === 'one_time' ? 'One Time' : 'Recurring'  }}</p>

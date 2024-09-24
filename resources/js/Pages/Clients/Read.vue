@@ -5,9 +5,13 @@
     import { usePage, Link, router } from '@inertiajs/vue3';
     import phoneNumberFormat from '@/Utilities/phoneNumberFormater';
     import MessageBanner from '@/Components/messageBanner.vue';
+    import { computed, onMounted, ref, watch } from 'vue';
 
-    const clients = usePage().props.clients;
-    
+   const clients = usePage().props.clients;
+   const returnClients = ref([]);
+   const searchInputValue = ref(""); 
+   
+
 
     function statusBg(client) {
 
@@ -21,7 +25,6 @@
 
         return statusColor;
 
-
     }
 
     function editUser(id) {
@@ -29,9 +32,33 @@
     }
 
 
-    function activePendingClients(client) {
+
+
+    function activeClients(client) {
         return client.status !== 'cancelled';
     }//
+
+
+    function searchClientsByName() {
+
+      
+        returnClients.value = searchInputValue.value !== "" ? 
+
+                    clients.filter( client => activeClients(client) && client.name.includes(searchInputValue.value) ) :
+
+                    clients.filter(client => activeClients(client));
+
+    }
+
+ 
+
+
+    onMounted( () => 
+        searchClientsByName()
+    );
+        
+    
+
 
 
 </script>
@@ -53,7 +80,8 @@
         <section class="flex justify-between items-center my-6">
             
             <div>
-                Filters
+                <p>Search Clients by Name <br/><span class="italic">(note* capitalizing matters)</span></p>
+                <input class="rounded w-80" v-model="searchInputValue" type="text" id="search-name" @keyup="searchClientsByName">
             </div>
             <div>
                 <BtnComponent :link="route('clients.create')">
@@ -65,8 +93,8 @@
             </div>
         </section>
 
-        <section v-if="clients.filter(activePendingClients).length !== 0">
-            <table class="table-fixed border-collapse border w-full">
+        <section v-if="returnClients.length !== 0">
+            <table id="search-reload" class="table-fixed border-collapse border w-full">
                 <thead class="bg-green-300">
                     <tr>
                         <th>Name</th>
@@ -77,7 +105,9 @@
                 </thead>
                 <tbody>
 
-                    <tr v-for="client in clients.filter(activePendingClients)" @click.prevent="editUser(client.id)" :key="client.id" class="text-center">
+                   
+
+                    <tr v-for="client in returnClients" @click.prevent="editUser(client.id)" :key="client.id" class="text-center">
                         <td>{{ client.name }}</td>
                         <td>{{ phoneNumberFormat(client.phone) }}</td>
                         <td>{{ client.email }}</td>

@@ -28,7 +28,7 @@
 
     <section>
         <p style="font-size: 20px">Thank you {{ $client->name }} for choosing Evergreen By Design!</p>
-        <p>Follow these steps to start your services</p>
+        <p>--- Follow these steps to start your services ---</p>
     </section>
 
     <section style="display:inline-block">
@@ -41,7 +41,7 @@
 
         <div style="border-bottom: 2px solid #cbd5e1;">
 
-            <h4>Second: Pay Your 50% Deposit Payment</h4>
+            <h4>Second: Pay to Start Your Services</h4>
             <p>Save this email as your invoice</p>
 
             <div>
@@ -50,19 +50,19 @@
                     <p>Preferred Payment Method: {{ $client->payment_option }}</p>
                     
                     @if ($payment->payment_method === 'Credit Card') 
-                    <p style="font-style: italic;">Note: Payment with credit card adds a 3.4% processing fee.</p>
+                    <p style="font-style: italic;">Note: Payment with credit card adds a {{config("services.stripe.processing_fee") * 100}}% processing fee.</p>
                     @endif
 
-                    <p>Deposit Amount: {{ $payment->amount }}</p>
+                    <p>Amount: {{ $payment->amount }}</p>
 
-                    <p>3.4% Processing Fee:  {{ $payment->processing_fee ? $payment->processing_fee : "$0.00 free with " . $payment->payment_method }}</p>
+                    <p>{{ config('services.stripe.processing_fee') * 100 }}% Processing Fee:  {{ $payment->processing_fee ? $payment->processing_fee : "$0.00 - free with " . $payment->payment_method }}</p>
 
                     <p style="font-weight: bold;">Total Payment Amount: {{ $payment->card_amount ? $payment->card_amount : $payment->amount }}</p>
 
                     @if ($payment->payment_method === 'Credit Card') 
                     <p style="margin-bottom: 8px;">Click Link To Pay With Card: {{ $payment->payment_link }}</p>
 
-                    <p style="font-style: italic;">Avoid future processing fees switch your perferred payment method to Zelle of Venmo.</p>
+                    <p style="font-style: italic;">Avoid future processing fees switch your perferred payment method to Zelle.</p>
 
                     @elseif ($payment->payment_method === 'Zelle') 
                     <p style="margin-bottom: 8px;">Send Payment by Zelle to: todd@evergreenbydesign.com</p>
@@ -89,9 +89,7 @@
                     <p>Phone: {{ $client->phone }}</p>
                     <p>Email: {{ $client->email }}</p>
                     <p>Location: {{ $client->location }}</p>
-                    <p>Hosting Services: {{ $client->hosting === 'Pending' ? 'EBD Hosting' : 'Self Hosting' }}</p>
-                    <p>Initial Quote: {{ $client->quote }}</p>
-                    <p>Balance Remaining Upon Completion: {{ $client->deposit }}</p>
+                    <p>Payment Amount: {{ $client->payment_option === 'Credit Card' ? $payment->card_amount : $payment->amount }}</p>
                     <p>Details: {{ $client->details }}</p> 
 
                 </div>
@@ -100,6 +98,25 @@
 
         <div>
             <p>Thank you. We appreciates your business!</p>
+        </div>
+        <div style="border-bottom: 2px solid #cbd5e1;">
+
+            <p>Appreciate our work and want to show us some extra love! We always appreciate a good cup of coffee ☕ at or review at Evergreen By Design.</p> 
+
+            <p>Coffee Donation Link: <a href="https://buy.stripe.com/14k9D61M9d5j50cdRT">https://buy.stripe.com/14k9D61M9d5j50cdRT</a></p>
+
+            <p>Leave Us a Review Here: <a href="https://g.page/r/CTAVc79GDT9HEB0/review">https://g.page/r/CTAVc79GDT9HEB0/review</a></p>
+
+        </div>
+        <div>
+
+            <p>Owner: Todd Worley</p>
+            <p>Phone: <a href="tel:+15413785563">(541) 378.5563</a></p>
+            <p>Email: <a href="mailto:todd@evergreenbydesign.com">todd@evergreenbydesign.com</a></p>
+            <p>Website: <a href="https://evergreenbydesign.com">https://evergreenbydesign.com</a></p>
+            <p>Location: Roseburg, Oregon</p>
+
+
         </div>
 
     </section>

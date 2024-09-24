@@ -59,18 +59,18 @@ class Clients extends Model
     protected function createdAt(): Attribute
     {
         return Attribute::make(
-            get: fn (string $value) => Carbon::create($value)->format('F jS Y @ g:ia'),
+            get: fn ($value) => Carbon::create($value, "UTC")->format('F jS Y @ g:ia'),
         );
     }
+
 
     protected function updatedAt(): Attribute
     {
         return Attribute::make(
-            get: fn (string $value) => Carbon::create($value)->format('F jS Y @ g:ia'),
+            get: fn ($value) => Carbon::create($value)->format('F jS Y @ g:ia'),
         );
     }
 
-    
 
 
     protected function domains(): Attribute

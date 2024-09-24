@@ -37,16 +37,29 @@ use App\Models\Payment;
     
 // Arcives------------------------/
     Route::get('archives', function () {
-        return Inertia::render( 'Archives/Read', [
+
+        $payments = Payment::all();
+        $payments_created_at = [];
+
+        
+        foreach($payments as $payment) {
+            $payments_created_at[] = [
+                'id' => $payment->id,
+                'created_date' => $payment->created_at
+            ];
+        }
+
+
+    return inertia( 'Archives/Read', [
             'clients' => Clients::all(),
-            'payments' => Payment::all()
+            'payments' => Payment::all(),
+            'payments_created_at' => $payments_created_at
         ]);
     })->name('archives');
+//   archives ===
 
 
 
-
-   
 
 
 

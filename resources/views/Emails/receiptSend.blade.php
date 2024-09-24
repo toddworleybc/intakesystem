@@ -51,7 +51,7 @@
                     <p>Amount Charged: {{ $payment->amount }}</p>
                     @endif
 
-                    <p>3.4% Processing Fee:  {{ $payment->processing_fee ? $payment->processing_fee : "0.00 free with " . $payment->payment_method }}</p>
+                    <p>Processing Fee: {{ config('services.stripe.processing_fee') * 100 }}%  {{ $payment->processing_fee ? $payment->processing_fee : "- 0.00 free with " . $payment->payment_method }}</p>
 
                     <p style="font-weight: bold;">Total Amount Paid: {{ $payment->card_amount ? $payment->card_amount : $payment->amount }}</p>
                     
@@ -62,6 +62,25 @@
 
         <div>
             <p>Thank you. We appreciates your business!</p>
+        </div>
+        <div style="border-bottom: 2px solid #cbd5e1;">
+
+            <p>Appreciate our work and want to show us some extra love! We always appreciate a good cup of coffee ☕ at or review at Evergreen By Design.</p> 
+
+            <p>Coffee Donation Link: <a href="https://buy.stripe.com/14k9D61M9d5j50cdRT">https://buy.stripe.com/14k9D61M9d5j50cdRT</a></p>
+
+            <p>Leave Us a Review Here: <a href="https://g.page/r/CTAVc79GDT9HEB0/review">https://g.page/r/CTAVc79GDT9HEB0/review</a></p>
+
+        </div>
+        <div>
+
+            <p>Owner: Todd Worley</p>
+            <p>Phone: <a href="tel:+15413785563">(541) 378.5563</a></p>
+            <p>Email: <a href="mailto:todd@evergreenbydesign.com">todd@evergreenbydesign.com</a></p>
+            <p>Website: <a href="https://evergreenbydesign.com">https://evergreenbydesign.com</a></p>
+            <p>Location: Roseburg, Oregon</p>
+
+
         </div>
 
     </section>

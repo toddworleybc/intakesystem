@@ -15,7 +15,8 @@
         for: null,
         amount: null,
         frequency: "one_time",
-        notes: null
+        notes: null,
+        payment_welcome_email: false
     });
 
 // set quote input
@@ -48,6 +49,23 @@ function setQuoteInput(e) {
 
     }//==
 
+    function checkIfEmailPaymentExists() {
+
+        const payments = client.payments;
+        let paymentWelcomeEmailExists = false;
+
+        payments.forEach(payment => {
+            
+
+            if(payment.payment_welcome_email) paymentWelcomeEmailExists = true;
+            
+        });
+
+    // shows/hides the attach an email option on create payment
+        return paymentWelcomeEmailExists ? false : true;
+
+    }
+
 
 </script>
 
@@ -66,8 +84,17 @@ function setQuoteInput(e) {
 
         <div class="border border-gray-200 px-4 py-10 rounded-sm shadow-lg">
             <div class="mb-12 border-b pb-2">
-                <h2>Payment to: {{ client.name }}</h2>
-                <p>Sending to: <a :href="'mailto:' + client.email">{{ client.email }}</a></p>
+                <div class="flex justify-between items-end">
+                    <div>
+                        <h2 class="border-b pb-2">Payment to: {{ client.name }}</h2>
+                        <p>Sending to: <a :href="'mailto:' + client.email">{{ client.email }}</a></p>
+                    </div>
+                    <div v-if="checkIfEmailPaymentExists()">
+                        <input type="checkbox" class="mr-4" v-model="form.payment_welcome_email"  id="payment_welcome_email">
+                        <label for="payment_welcome_email">Attach to welcome email</label>
+                    </div>
+                </div>
+                
             </div>
             
 

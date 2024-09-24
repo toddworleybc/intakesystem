@@ -25,7 +25,8 @@ class Payment extends Model
         'card_amount',
         'processing_fee',
         'notes',
-        'payment_link'
+        'payment_link',
+        'payment_welcome_email'
     ];
 
      // Casts ===============/
@@ -34,7 +35,7 @@ class Payment extends Model
      {
          return [
              'payment_sent_count' => 'array',
-             'receipt_cent_dates' => 'array'
+             'receipt_sent_dates' => 'array'
          ];
      }
 
@@ -61,12 +62,21 @@ class Payment extends Model
         );
     }
 
+    protected function paymentWelcomeEmail(): Attribute
+    {
+        return Attribute::make(
+            get: fn (string $value) => $value === '1' ? true : false,
+        );
+    }
+
+
     protected function createdAt(): Attribute
     {
         return Attribute::make(
             get: fn (string $value) => Carbon::create($value)->format('F jS Y @ g:ia'),
         );
     }
+
 
     protected function updatedAt(): Attribute
     {

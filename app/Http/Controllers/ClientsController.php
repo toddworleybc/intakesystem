@@ -1,22 +1,18 @@
 <?php
 
 namespace App\Http\Controllers;
-use Illuminate\Support\Str;
+
 
 use App\Models\Clients;
 use App\Models\Payment;
-use App\Http\Controllers\PaymentController;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
-use Illuminate\Support\Number;
-use Illuminate\Support\Arr;
+use App\Http\Requests\ClientRequest;
+use Carbon\Carbon;
 
 
 class ClientsController extends Controller
 {
-
-
-   
 
 
     /**
@@ -27,10 +23,8 @@ class ClientsController extends Controller
         //
       
        
-        
-        $allClients = $clients->all()->reverse()->values();
-        
-    
+         $allClients = $clients->orderBy('name', 'asc')->get()->all();
+
 
 
         return Inertia::render("Clients/Read", ["clients" => $allClients]);
@@ -49,61 +43,9 @@ class ClientsController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    // public function store(StoreClientsRequest $request, PaymentController $payment)
-    // {
-    //     //
-        
-        
-
-    //     if($clientStore = $request->validated()) {
-
-    //         $clientStore['welcome_email_sent_count'] = json_encode([]);
-            
-            
-    // // create request deposit
-    //     $clientStore['deposit'] = Number::format(($request->quote / 2), precision: 2);
-
-    //     $clientStore['deposit'] = preg_replace('/,/', '', $clientStore['deposit']);
-       
-
-            
-    //     $clientStore['quote'] = $clientStore['quote'] ? $clientStore['quote'] : '0.00';
-
-    // // format domain to json
-    //         $clientStore['domains'] = json_encode($request->domains);
-
-    // // format pro_emails to json
    
-    //         $clientStore['pro_emails'] = json_encode($request->pro_emails);
-           
-    // // create client
-    //         $client = Clients::create($clientStore);
 
-
-    // // create an initial quote
-    //     if($client->create_quote) {
-
-    //         $order = [
-    //             'client' => $client,
-    //             'amount' => $client->deposit,
-    //             'notes' => 'Initial deposit for services',
-    //             'frequency' => 'one_time',
-    //             'receipt_sent_dates' => []
-    //         ];
-
-    // // create initial payment  
-    //         $payment->store($order, true);
-
-    //     } // create quote
-        
-
-    //     return to_route('clients.show', $client)->with('success', "Client has been created!");
-
-    //     }
-
-    // }
-
-    public function store(Request $request)
+    public function store(ClientRequest $request)
     {
         //
 
@@ -111,80 +53,63 @@ class ClientsController extends Controller
             $newClient = new Clients();
             $client = $request->all();
             $name = $request->name;
-            $createdStatus = null;
-            $message = null;
+        
             
         // create client
             $createdClient = $newClient->create($client);
 
-        // check and set message and status
-            if($createdClient) {
-                $createdStatus = 'success';
-                $message = "$name was successfully created!";
-            }  else {
-                $createdStatus = 'error';
-                $message = "Failed to create client $name";
-            }
+    // set message and status
+         $createdClientStatus = $createdClient ? 
+        [
+            'status' => 'success',
+            'type' => 'safe',
+            'message' => "Successfully created client $name!"
+        ] :
+        [
+            'status' => 'error',
+            'type' => 'danger',
+            'message' => "Failed to create client $name!"
+        ];     
 
         // return to route
-         return to_route("clients.show", $createdClient)->with(
-              $createdStatus, 
-              $message
-        );
+         return to_route("clients.show", $createdClient)->with('message', $createdClientStatus);
 
     }
 
+    
     /**
-     * Display the specified resource.
+     * Show single resource.
      */
-    // public function show(Clients $clients, $id, Request $request)
-    // {   
-       
-    //     $client = Clients::find($id);
-
-
-    // // controls the message banner
-    //     $client['created'] = $request->query("client_created") ? true : false;
-    //     $client['updated'] = $request->query("client_updated") ? true : false;
-
-    // // sets date format for display
-    //     $client["createdAt"] = $client->created_at->format("F jS, Y, g:i a");
-    //     $client["updatedAt"] = $client->updated_at->format("F jS, Y, g:i a");
-
-
-    // // Reverse payments for table display
-    //     $payments = $client->payments->reverse()->values();
-        
-    // // domains back to array format
-    //     $client["domains"] = json_decode($client["domains"]);
-
-    // // pro_emails back to array format
-    //     $client["pro_emails"] = json_decode($client['pro_emails']);
-    //     $client["welcome_email_sent_count"] = json_decode($client["welcome_email_sent_count"]);
-
-            
-    //     return Inertia::render("Clients/Show", [
-    //       'client' =>  $client,
-    //       'payments' => $payments
-    //     ], );
-
-    // }
-
 
     public function show(Clients $clients, $id)
+
     {   
         
+        // dd(now());
+
         $client = $clients->find($id);
-        $payments = $client->payments->all();
+        $payments = array_reverse($client->payments->all());
 
+        $dateTest = now('UTC')->format($client->created_at);
+        $created_at = $client->created_at;
+        $updated_at = $client->updated_at;
+        $payments_created_at = [];
 
-        
+        foreach($payments as $payment) {
+            $payments_created_at[] = [
+                'id' => $payment->id,
+                'created_date' => $payment->created_at
+            ];
+        }
 
-
-        return Inertia::render('Clients/Show', [
+        return inertia('Clients/Show', [
             'client' => $client,
-            'payments' => $payments
+            'payments' => $payments,
+            'created_at' => $created_at,
+            'updated_at' => $updated_at,
+            'payments_created_at' => $payments_created_at
         ]);
+
        
     }
 
@@ -194,11 +119,7 @@ class ClientsController extends Controller
     public function edit(Clients $clients, $id)
     {
         //
-        $client = Clients::find($id);
-
-        $client['domains'] = json_decode($client["domains"]);
-
-        $client['pro_emails'] = json_decode($client["pro_emails"]);
+        $client = $clients->find($id);
 
 
         return Inertia::render("Clients/Edit", $client);
@@ -207,11 +128,12 @@ class ClientsController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateClientsRequest $request, Clients $clients, $id, Payment $payments)
+    public function update(ClientRequest $request, $id)
     {
         //
 
         $client = Clients::find($id);
+        $name = $client->name;
 
         
 // restore client if cancelled 
@@ -246,26 +168,24 @@ class ClientsController extends Controller
 
         }//
 
-        // dd($client);
 
 // save client
-        $client->update($request->all());
+            $updatedClient = $client->update($request->all());
 
-// Sets initial payment to pending if client is pending
-        if($client->status === 'pending') {
+            // set message and status
+            $clientUpdatedStatus = $updatedClient ? 
+            [
+                'status' => 'success',
+                'type' => 'safe',
+                'message' => "Successfully updated client $name!"
+            ] :
+            [
+                'status' => 'error',
+                'type' => 'danger',
+                'message' => "Failed to update client $name!"
+            ];     
 
-            $payment = $payments->find($client->payments)->where('initial_payment', 1)[0];
-
-           
-
-            $payment->status = 'pending';
-
-           
-
-            $payment->save();
-        }
-
-        return to_route("clients.show",$client)->with('success', 'Client has been updated!');
+        return to_route("clients.show",$client)->with('message', $clientUpdatedStatus);
 
     }// end of update
 
@@ -299,9 +219,6 @@ class ClientsController extends Controller
        return to_route("clients.index")->with('success', "Client $client->name was deleted!");
 
     }
-
-
-   
     
 }
 

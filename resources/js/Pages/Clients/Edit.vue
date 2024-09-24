@@ -1,7 +1,6 @@
 <script setup>
     import MainLayout from '@/Layouts/MainLayout.vue';
     import { useForm, Link, router } from '@inertiajs/vue3';
-    import { CheckCircleIcon } from '@heroicons/vue/24/outline';
     import { useAttrs, ref } from 'vue';
     import BtnComponent from '@/Components/Button.vue';
     import MessageBanner from '@/Components/messageBanner.vue';
@@ -101,10 +100,10 @@
             </BtnComponent>
         </div>
         
-
+<!-- 
         <MessageBanner :show="editSuccessful" type="safe">
             Client Updated!
-        </MessageBanner>
+        </MessageBanner> -->
 
 
 
@@ -139,11 +138,10 @@
                     </div>
 
                     <div class="mb-8">
-                        <label class="mb-1 text-xl block" for="hosting">Hosting</label>
-                        <div v-if="form.errors.hosting" class="bg-red-500 text-white w-3/4 py-1 px-4 rounded-sm mb-2"><p class="mb-0">{{ form.errors.hosting }}</p></div>
-                        <select v-model="form.hosting" form="create-client" class="block rounded-lg w-3/4 border-gray-400 shadow-gray-200 shadow-md py-2" name="hosting" id="hosting">
-                            <option value="Self Hosting">Self Hosting</option>
-                            <option value="Pending">Pending</option>
+                        <label class="mb-1 text-xl block" for="ad_campaign_status">Ad Campaign Status</label>
+                        <div v-if="form.errors.ad_campaign_status" class="bg-red-500 text-white w-3/4 py-1 px-4 rounded-sm mb-2"><p class="mb-0">{{ form.errors.ad_campaign_status }}</p></div>
+                        <select v-model="form.ad_campaign_status" form="create-client" class="block rounded-lg w-3/4 border-gray-400 shadow-gray-200 shadow-md py-2" name="ad_campaign_status" id="ad_campaign_status">
+                            <option value="Paused">Paused</option>
                             <option value="Active">Active</option>
                         </select>
                     </div>

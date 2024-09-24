@@ -1,12 +1,9 @@
 <script setup>
     import MainLayout from '@/Layouts/MainLayout.vue';
-    import BtnComponent from '@/Components/Button.vue';
-    import { PlusCircleIcon } from '@heroicons/vue/24/solid';
     import { usePage, Link, router } from '@inertiajs/vue3';
     import phoneNumberFormat from '@/Utilities/phoneNumberFormater';
     import MessageBanner from '@/Components/messageBanner.vue';
-    import moment from 'moment';
-    import { ref } from 'vue';
+    import { ref, onBeforeMount } from 'vue';
 
     const clients = usePage().props.clients;
     const payments = usePage().props.payments;
@@ -55,10 +52,6 @@ function paymentsPending() {
         return pendingPayments.length === 0 ? false : pendingPayments; 
 
     }//
-
-    function createdAtDate(createdDate) {
-       return moment(createdDate).format('MMMM Do YYYY');
-    }
     
 
    
@@ -101,18 +94,27 @@ function paymentsPending() {
         let clientName = null;
 
 
-
         clients.forEach( client => {
 
             if(payment.clients_id === client.id) {
-
-                clientName = client.name;
-
-            } else {
-                clientName = "Client Deleted";
+                clientName = client.name
             }
 
         } );
+
+
+        // clients.forEach( client => {
+
+               
+        //     if(payment.clients_id === client.id) {
+                
+        //         clientName = client.name;
+
+        //     } else {
+        //         clientName = "Client Deleted";
+        //     }
+
+        // } );
 
         return clientName;
 
@@ -128,6 +130,28 @@ function paymentsPending() {
             'clientId' : client.id
         });
     }//===
+
+
+// FIX FOR TIME CHANGE FROM DB ==
+
+    onBeforeMount( () => {
+        const created_at = usePage().props.created_at;
+        const updated_at = usePage().props.updated_at;
+        const payments_created_at = usePage().props.payments_created_at;
+        payments['created_at'] =  created_at;
+        payments['updated_at'] = updated_at;
+        
+        
+        payments.forEach( ( payment, i ) => {
+
+            if(payment.id === payments_created_at[i].id) {
+                payment.created_at = payments_created_at[i].created_date;
+            } 
+
+        } );
+
+    } );
+// ==/
 
 
 </script>
@@ -218,7 +242,7 @@ function paymentsPending() {
 
                             <tr v-for="payment in paymentsPaid()" @click.prevent="viewPayment(payment.id)"  class="text-center">
                                 <td>{{ clientNamePaymentsShow(payment) }}</td>
-                                <td>{{ createdAtDate(payment.created_at) }}</td>
+                                <td>{{ payment.created_at }}</td>
                                 <td>{{ payment.invoice_id }}</td>
                                 <td>${{ payment.amount }}</td>
                                 <td :class="{'text-white bg-yellow-500': payment.initial_payment}">{{ payment.for }}</td>
@@ -252,7 +276,7 @@ function paymentsPending() {
 
                             <tr v-for="payment in paymentsVoid()" @click.prevent="viewPayment(payment.id)"  class="text-center">
                                 <td>{{ clientNamePaymentsShow(payment) }}</td>
-                                <td>{{ createdAtDate(payment.created_at) }}</td>
+                                <td>{{ payment.created_at }}</td>
                                 <td>{{ payment.invoice_id }}</td>
                                 <td>${{ payment.amount }}</td>
                                 <td :class="{'text-white bg-yellow-500': payment.initial_payment}">{{ payment.for }}</td>
