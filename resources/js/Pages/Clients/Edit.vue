@@ -99,13 +99,6 @@
                 Exit
             </BtnComponent>
         </div>
-        
-<!-- 
-        <MessageBanner :show="editSuccessful" type="safe">
-            Client Updated!
-        </MessageBanner> -->
-
-
 
         <div class="border border-gray-200 px-4 py-10 rounded-sm shadow-lg">
 

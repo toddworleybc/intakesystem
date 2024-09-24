@@ -2,11 +2,8 @@
     import MainLayout from '@/Layouts/MainLayout.vue';
     import { useForm } from '@inertiajs/vue3';
     import Loader from '@/Utilities/loader.js';
-    import { ref, watch, watchEffect, watchPostEffect } from 'vue';
-    import currencyFormater from '@/Utilities/currencyFormater';
-    
+    import { ref } from 'vue';
     import MessageBannerComponent from '@/Components/messageBanner.vue';
-    import inputCurrencyFormat from '@/Utilities/inputCurrencyFormat';
 
 
     const formError = ref(null);

@@ -3,12 +3,9 @@
     import BtnComponent from '@/Components/Button.vue'; 
     import MessageBannerComponent from '@/Components/messageBanner.vue';
     import messageBannerControl from '@/Utilities/messageBannerControl';
-    import { computed, ref, onMounted, onBeforeMount } from 'vue';
+    import { computed, onMounted, onBeforeMount } from 'vue';
     import { router, usePage } from '@inertiajs/vue3';
     import Loader from '@/Utilities/loader.js';
-    import moment from 'moment';
-    
-    import dateFormater from '@/Utilities/dateFormater';
     import currencyFormater from '@/Utilities/currencyFormater';
     import phoneNumberFormat from '@/Utilities/phoneNumberFormater';
 
@@ -62,7 +59,6 @@
           return  payment.frequency === 'recurring' && payment.status !== 'void';
         } );
 
-        console.log(subscriptions);
 
         return subscriptions.length === 0 ?
             [] :
@@ -221,7 +217,7 @@
 
         return client.status === 'cancelled' ? true : false;
 
-    } 
+    }//==
 
 
 
@@ -247,11 +243,11 @@
         });
 
         
-    }//
+    }//==
 
     function welcomeEmailsDatesSent() {
         return client.welcome_email_sent_count.slice().reverse();
-    }//
+    }//==
 
 
 

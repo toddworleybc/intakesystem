@@ -6,9 +6,9 @@ namespace App\Http\Controllers;
 use App\Models\Clients;
 use App\Models\Payment;
 use Inertia\Inertia;
-use Illuminate\Http\Request;
 use App\Http\Requests\ClientRequest;
-use Carbon\Carbon;
+use App\Http\Requests\ClientsUpdateRequest;
+
 
 
 class ClientsController extends Controller
@@ -128,7 +128,7 @@ class ClientsController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(ClientRequest $request, $id)
+    public function update(ClientsUpdateRequest $request, $id)
     {
         //
 

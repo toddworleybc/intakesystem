@@ -103,19 +103,6 @@ function paymentsPending() {
         } );
 
 
-        // clients.forEach( client => {
-
-               
-        //     if(payment.clients_id === client.id) {
-                
-        //         clientName = client.name;
-
-        //     } else {
-        //         clientName = "Client Deleted";
-        //     }
-
-        // } );
-
         return clientName;
 
     }//
@@ -301,9 +288,6 @@ function paymentsPending() {
         </div>
         <!-- #/ payments-table -->
 
-        <!-- <section v-else class="bg-yellow-500 text-white text-center py-4">
-            No Clients Created
-        </section> -->
 
     </MainLayout>
 

@@ -1,17 +1,12 @@
 <script setup>
     import MainLayout from '@/Layouts/MainLayout.vue';
-    import BtnComponent from '@/Components/Button.vue';
-    import { PlusCircleIcon } from '@heroicons/vue/24/solid';
-    import { usePage, Link, router } from '@inertiajs/vue3';
-    import phoneNumberFormat from '@/Utilities/phoneNumberFormater';
-    import MessageBanner from '@/Components/messageBanner.vue';
-    import moment from 'moment';
-    import { ref, onBeforeMount } from 'vue';
+    import { usePage, router } from '@inertiajs/vue3';
+    import { onBeforeMount } from 'vue';
     import currencyFormater from '@/Utilities/currencyFormater';
 
     const clients = usePage().props.clients;
     const payments = usePage().props.payments;
-    const filter = ref('payments');
+   
 
 
     
@@ -20,7 +15,6 @@
           return  payment.frequency === 'recurring' && payment.status !== 'void';
         } );
 
-        console.log(subscriptions);
 
         return subscriptions.length === 0 ?
             [] :
@@ -65,10 +59,6 @@ function paymentsPending() {
         return pendingPayments.length === 0 ? false : pendingPayments; 
 
     }//
-
-    // function createdAtDate(createdDate) {
-    //    return moment(createdDate).format('MMMM Do YYYY');
-    // }
     
 
     function statusBgClient(client) {
@@ -382,10 +372,6 @@ function paymentsPending() {
 
         </div>
         <!-- #/ payments-table -->
-
-        <!-- <section v-else class="bg-yellow-500 text-white text-center py-4">
-            No Clients Created
-        </section> -->
 
     </MainLayout>
 

@@ -2,16 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\SendPayment;
 use App\Models\Clients;
 use App\Models\Payment;
 use Illuminate\Http\Request;
-use App\Http\Requests\StorePaymentRequest;
-use App\Http\Requests\UpdatePaymentRequest;
+
 use Illuminate\Support\Number;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\Mail;
 
 class PaymentController extends Controller
 {

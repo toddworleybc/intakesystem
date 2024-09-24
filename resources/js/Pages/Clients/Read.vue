@@ -2,10 +2,10 @@
     import MainLayout from '@/Layouts/MainLayout.vue';
     import BtnComponent from '@/Components/Button.vue';
     import { PlusCircleIcon } from '@heroicons/vue/24/solid';
-    import { usePage, Link, router } from '@inertiajs/vue3';
+    import { usePage, router } from '@inertiajs/vue3';
     import phoneNumberFormat from '@/Utilities/phoneNumberFormater';
     import MessageBanner from '@/Components/messageBanner.vue';
-    import { computed, onMounted, ref, watch } from 'vue';
+    import { onMounted, ref } from 'vue';
 
    const clients = usePage().props.clients;
    const returnClients = ref([]);
