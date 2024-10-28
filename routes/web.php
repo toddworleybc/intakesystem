@@ -21,7 +21,7 @@ use App\Models\Payment;
 
     Route::resource('payments', PaymentController::class);
 
-    Route::post('/create-new-payment', [PaymentController::class,'createNewPayment'])->name('payments.create.new');
+    // Route::post('/create-new-payment', [PaymentController::class,'createNewPayment'])->name('payments.create.new');
 
 // Email Routes---------------------------/
     Route::post('/welcome-email', [SendEmailsController::class,'welcomeEmailSend'])->name('welcome.email.send');
@@ -32,21 +32,34 @@ use App\Models\Payment;
     Route::post('/send-receipt', [SendEmailsController::class, 'sendReceipt'])->name('receipt.send');
 
 
-    Route::get('/view-email', [SendEmailsController::class, 'viewEmail'])->name('view.email');
+    Route::post('/view-email', [SendEmailsController::class, 'viewEmail'])->name('view.email');
 
     
 // Arcives------------------------/
     Route::get('archives', function () {
-        return Inertia::render( 'Archives/Read', [
+
+        $payments = Payment::all();
+        $payments_created_at = [];
+
+        
+        foreach($payments as $payment) {
+            $payments_created_at[] = [
+                'id' => $payment->id,
+                'created_date' => $payment->created_at
+            ];
+        }
+
+
+    return inertia( 'Archives/Read', [
             'clients' => Clients::all(),
-            'payments' => Payment::all()
+            'payments' => Payment::all(),
+            'payments_created_at' => $payments_created_at
         ]);
     })->name('archives');
+//   archives ===
 
 
 
-
-   
 
 
 

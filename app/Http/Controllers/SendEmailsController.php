@@ -21,19 +21,17 @@ class SendEmailsController extends Controller
 
 
     public function viewEmail(Request $request) {
-      
+    
 
             $client = (object) $request->client;
             $payment = (object) $request->payment;
 
-            $clientFormattedForEmail = $this->formatNumberToCurrency($client, 'client');
-            $paymentFormattedForEmail = $this->formatNumberToCurrency($payment, 'payment');
 
             if($request->view === 'welcome_email') {
 
                 return view('Emails/welcomeEmail', [
-                    'client' => $clientFormattedForEmail,
-                    'payment' => $paymentFormattedForEmail,
+                    'client' => $client,
+                    'payment' => $payment,
                     'view' => true
                 ]);
 
@@ -42,8 +40,8 @@ class SendEmailsController extends Controller
             if($request->view === 'payment_email') {
 
                 return view('Emails/sendPayment', [
-                    'client' =>  $clientFormattedForEmail,
-                    'payment' => $paymentFormattedForEmail,
+                    'client' =>  $client,
+                    'payment' => $payment,
                     'view' => true
                 ]);
 
@@ -53,8 +51,8 @@ class SendEmailsController extends Controller
             if($request->view === 'receipt_email') {
 
                 return view('Emails/receiptSend', [
-                    'client' => $clientFormattedForEmail,
-                    'payment' => $paymentFormattedForEmail,
+                    'client' => $client,
+                    'payment' => $payment,
                     'view' => true
                 ]);
 
@@ -68,28 +66,42 @@ class SendEmailsController extends Controller
 
        
 
-
         $client = Clients::find($request->id);
-        $initialPaymentCreated = $client->payments()->where("initial_payment", 1)->first();
+        $welcomeEmailPayment = $client->payments()->where("payment_welcome_email", 1)->first();
      
-                
-// set welcome email sent count
-        $client->welcome_email_sent_count = $this->setWelcomeEmailSentCount($client);
-
-
-// add payment count
-        $this->setPaymentSentCount($initialPaymentCreated);
-
-
-        $clientFormattedForEmail = $this->formatNumberToCurrency($client, 'client');
-        $initialPaymentFormattedForEmail = $this->formatNumberToCurrency($initialPaymentCreated, 'payment');
 
 
     // Send Email
-        Mail::to($client->email)->send(new WelcomeEmail($clientFormattedForEmail, $initialPaymentFormattedForEmail));
+       $welcomeEmailSent = Mail::to($client->email)->send(new WelcomeEmail($client, $welcomeEmailPayment));
 
 
-        return to_route('clients.show', $client)->with('success', "Welcome email has been sent!");
+        if($welcomeEmailSent) {
+            // set welcome email sent count
+                $client->welcome_email_sent_count = $this->setWelcomeEmailSentCount($client);
+
+
+            // add payment count
+                    $this->setPaymentSentCount($welcomeEmailPayment);
+        
+        }
+
+
+
+        // set message and status
+        $welcomeEmailSentStatus = $welcomeEmailSent ? 
+        [
+            'status' => 'success',
+            'type' => 'safe',
+            'message' => "Welcome email sent to {$client->name}!"
+        ] :
+        [
+            'status' => 'error',
+            'type' => 'danger',
+            'message' => "Failed to send welcome email {$client->name}!"
+        ];  
+
+
+        return to_route('clients.show', $client)->with('message', $welcomeEmailSentStatus);
 
     }
     //==
@@ -103,22 +115,38 @@ class SendEmailsController extends Controller
     public function sendPayment(Request $request) {
 
         $payment = Payment::find($request->id);
-
-// add sent count
-    $this->setPaymentSentCount($payment);
+        $client = Clients::find($payment->client->id);
  
+         // add sent count
+        $this->setPaymentSentCount($payment);
 
-        $payment->amount = Number::currency($payment->amount);
+       $payment->amount = Number::currency($payment->amount);
 
         if($payment->payment_method === 'Credit Card') {
             $payment->card_amount = Number::currency($payment->card_amount);
             $payment->processing_fee = Number::currency($payment->processing_fee);
         }
 
-// send payment email
-        Mail::to($payment->client->email)->send(new SendPayment($payment));
 
-        return to_route('payments.show', $payment->id)->with('success', 'Payment sent!');
+// send payment email
+       $paymentSent = Mail::to($payment->client->email)->send(new SendPayment($payment));
+
+   
+
+        // set message and status
+        $paymentSentStatus = $paymentSent ? 
+        [
+            'status' => 'success',
+            'type' => 'safe',
+            'message' => "Payment sent to {$client->name}!"
+        ] :
+        [
+            'status' => 'error',
+            'type' => 'danger',
+            'message' => "Failed to send payment to {$client->name}!"
+        ];  
+
+        return to_route('payments.show', $payment->id)->with('message', $paymentSentStatus);
  
      }//
 
@@ -130,7 +158,8 @@ class SendEmailsController extends Controller
     public function sendReceipt(Request $request) {
 
         $payment = Payment::find($request->id);
-
+        $client = Clients::find($payment->clients_id);
+        // dd($payment);
 // add sent count
         $this->setReceiptSentCount($payment);
  
@@ -143,9 +172,21 @@ class SendEmailsController extends Controller
        
 
 // send payment email
-        Mail::to($payment->client->email)->send(new SendReceipt($payment));
+      $receiptSent =  Mail::to($payment->client->email)->send(new SendReceipt($payment));
 
-        return to_route('payments.show', $payment->id)->with('success', 'Receipt sent!');
+      $receiptSentStatus = $receiptSent ? 
+      [
+          'status' => 'success',
+          'type' => 'safe',
+          'message' => "Receipt sent to {$client->name}!"
+      ] :
+      [
+          'status' => 'error',
+          'type' => 'danger',
+          'message' => "Failed to send receipt to {$client->name}!"
+      ];  
+
+        return to_route('payments.show', $payment->id)->with('message', $receiptSentStatus);
  
      }//
 
@@ -187,13 +228,11 @@ class SendEmailsController extends Controller
 
      private function setPaymentSentCount($payment) {
 
-        $payment = Payment::find($payment->id);
-
-        $paymentDates = json_decode($payment->payment_sent_count);
+        $paymentDates = $payment->payment_sent_count;
  
-        $paymentDates[] = now()->format("F jS, Y, g:i a");
+        $paymentDates[] = (string) now()->format("F jS, Y, g:i a");
 
-        $payment->payment_sent_count = json_encode($paymentDates); 
+        $payment->payment_sent_count = $paymentDates; 
  
         $payment->save();
 
@@ -201,13 +240,12 @@ class SendEmailsController extends Controller
 
      private function setReceiptSentCount($payment) {
 
-        $payment = Payment::find($payment->id);
 
-        $receiptDates = json_decode($payment->receipt_sent_dates);
+        $receiptDates = $payment->receipt_sent_dates;
  
-        $receiptDates[] = now()->format("F jS, Y, g:i a");
+        $receiptDates[] = (string) now()->format("F jS, Y, g:i a");
 
-        $payment->receipt_sent_dates = json_encode($receiptDates); 
+        $payment->receipt_sent_dates = $receiptDates; 
  
         $payment->save();
 
@@ -215,18 +253,17 @@ class SendEmailsController extends Controller
 
 
      private function setWelcomeEmailSentCount($client) {
+       
 
-        $client->welcome_email_sent = true;
+        $welcomeEmailCount = $client->welcome_email_sent_count;
 
-        $welcomeEmailCount = json_decode($client->welcome_email_sent_count);
+        $welcomeEmailCount[] = (string) now()->format("F jS, Y, g:i a");;
 
-        $welcomeEmailCount[] = now()->format("F jS, Y, g:i a");;
-
-        $client->welcome_email_sent_count = json_encode($welcomeEmailCount);
+        $client->welcome_email_sent_count = $welcomeEmailCount;
 
         $client->save();
 
-        return json_decode($client->welcome_email_sent_count);
+        return $client->welcome_email_sent_count;
 
      }//
 

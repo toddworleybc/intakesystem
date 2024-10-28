@@ -32,8 +32,9 @@ return [
     ],
 
     'stripe' => [
-        'key' => env('STRIPE_SECRET_KEY'),
+        'live' => env('STRIPE_SECRET_KEY'),
         'test' => env('STRIPE_TEST_SECRET_KEY'),
+        'processing_fee' => env('PAYMENT_PROCESSING_FEE', "0.035")
     ],
 
     'signwell' => [

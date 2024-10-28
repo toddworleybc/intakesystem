@@ -2,26 +2,28 @@
     import MainLayout from '@/Layouts/MainLayout.vue';
     import BtnComponent from '@/Components/Button.vue'; 
     import MessageBannerComponent from '@/Components/messageBanner.vue';
-    import { computed, ref } from 'vue';
+    import messageBannerControl from '@/Utilities/messageBannerControl';
+    import { computed, onMounted, onBeforeMount } from 'vue';
     import { router, usePage } from '@inertiajs/vue3';
     import Loader from '@/Utilities/loader.js';
-    import moment from 'moment';
     import currencyFormater from '@/Utilities/currencyFormater';
     import phoneNumberFormat from '@/Utilities/phoneNumberFormater';
+
 
 
     
     const client = usePage().props.client;
     const payments = usePage().props.payments;
+    const message = usePage().props.flash.message;
+
 
 // return all pending payments
     function paymentsPending() {
-        
-
+    
         const pendingPayments = [];
 
         payments.forEach(payment => {
-            if(payment.status === 'pending') pendingPayments.push(payment);
+            if(payment.status === 'pending' && payment.frequency !== 'recurring') pendingPayments.push(payment);
         });
 
         return pendingPayments.length === 0 ? false : pendingPayments; 
@@ -51,13 +53,51 @@
         return pendingPayments.length === 0 ? false : pendingPayments; 
 
     }//
+
+    function recurringPayments() {
+        const subscriptions =  payments.filter( payment => {
+          return  payment.frequency === 'recurring' && payment.status !== 'void';
+        } );
+
+
+        return subscriptions.length === 0 ?
+            [] :
+            subscriptions;
+
+    }
+
+    function subscriptionsAmount() {
+
+        let amount = 0;
+
+        payments.forEach(payment => {
+
+            
+            if(payment.frequency === 'recurring') {
+
+                if(payment.payment_method === 'Credit Card') {
+                    if(payment.status === 'paid') amount = amount + parseFloat(payment.card_amount);
+                } else {
+                    amount = amount + parseFloat(payment.amount);
+                }
+
+            }
+        
+        });
+
+
+
+        return amount;
+
+    }//===
    
 
     function pendingAmount() {
 
-        let amount = 0.00;
+        let amount = 0;
 
         payments.forEach(payment => {
+
             
             if(payment.status === 'pending') {
 
@@ -68,8 +108,10 @@
                 }
 
             }
-
+           
         });
+
+        
 
        return amount;
 
@@ -91,11 +133,10 @@
     }
     
 
-    const hostingClassObj = computed( () => ({
-        "bg-gray-300" : client.hosting === "Self Hosting",
-        "bg-green-500 text-white" : client.hosting === "Active",
-        "bg-yellow-500 text-white" : client.hosting === "Pending",
-        
+    const adCampaignStatusClassObj = computed( () => ({
+        "bg-gray-300" : client.ad_campaign_status === "Paused",
+        "bg-green-500 text-white" : client.ad_campaign_status === "Active",
+        "bg-yellow-500 text-white" : client.ad_campaign_status === "Inactive",
     }));
 
     const statusClassObj = computed( () => ({
@@ -113,7 +154,7 @@
 
 
         payments.forEach( payment => {
-            if(payment.initial_payment) {
+            if(payment.payment_welcome_email) {
                 if(payment.status === 'pending') show = true;
             }
         });
@@ -176,13 +217,9 @@
 
         return client.status === 'cancelled' ? true : false;
 
-    } 
+    }//==
 
-   
 
-    function createdAtDate(createdDate) {
-       return moment(createdDate).format('MMMM Do YYYY');
-    }
 
 
     function restoreClient() {
@@ -206,54 +243,71 @@
         });
 
         
-    }//
+    }//==
 
     function welcomeEmailsDatesSent() {
         return client.welcome_email_sent_count.slice().reverse();
-    }//
+    }//==
 
 
-    function initialPaymentStatus() {
-
-        const payments = client.payments;
-
-        let paymentStatus = {
-            'status' : null,
-            'updated' : null
-        };
-
-        payments.forEach( payment => {
-
-            if(payment.initial_payment) {
-
-              
-
-              paymentStatus.status = payment.status;
-              paymentStatus.updated = moment(payment.updated_at).format('MMMM Do YYYY');
-
-            }
-
-        } );
-
-
-        return paymentStatus;
-
-    }//
 
     function viewWelcomeEmail() {
 
-        const initialPayment = payments.filter( payment => {
-                return payment.initial_payment === 1;
-            } );
 
-        router.get(route('view.email'), {
+        let welcomeEmailPayment = null;
+
+      payments.forEach( payment => {
+            if(payment.payment_welcome_email) welcomeEmailPayment = payment;
+        } );
+        
+       
+
+        router.post(route('view.email'), {
             'view': 'welcome_email',
             'client': client,
-            'payment': initialPayment[0]
+            'payment': welcomeEmailPayment
         });
 
-
     }//
+
+    function welcomeEmailPaymentExists() {
+
+        let emailExists = false;
+
+        payments.forEach( payment => {
+            
+            if(payment.payment_welcome_email)  emailExists = true;
+            
+        } );
+
+        return emailExists;
+    }
+
+// FIX FOR TIME CHANGE FROM DB ==
+
+    onBeforeMount( () => {
+        const created_at = usePage().props.created_at;
+        const updated_at = usePage().props.updated_at;
+        const payments_created_at = usePage().props.payments_created_at;
+        client['created_at'] =  created_at;
+        client['updated_at'] = updated_at;
+        
+        
+        payments.forEach( ( payment, i ) => {
+
+            if(payment.id === payments_created_at[i].id) {
+                payment.created_at =payments_created_at[i].created_date;
+            } 
+
+        } );
+
+    } );
+// ==/
+
+    onMounted( () => {
+        if(message) messageBannerControl.display(message);
+       
+    } );
 
 </script>
 
@@ -269,21 +323,15 @@
             </BtnComponent>
         </div>
 
-    <!-- Success  -->
-        <MessageBannerComponent :show="$page.props.flash.success" type="safe">
-            {{ $page.props.flash.success }}
-        </MessageBannerComponent>
-       
-    <!-- Error  -->
-        <MessageBannerComponent :show="$page.props.flash.error" type="danger">
-            {{ $page.props.flash.error }}
-        </MessageBannerComponent>
-
+        <MessageBannerComponent :show="messageBannerControl" />
     
 
 
         <div class="border border-gray-200 px-4 py-10 rounded-sm shadow-lg relative">
-
+            <div class="mb-4">
+                <p>Total Monthly Subscriptions: {{ currencyFormater(subscriptionsAmount()) }}</p>
+                <p>Est. Monthly Payout: {{ currencyFormater( subscriptionsAmount() * 0.965) }}</p>
+            </div>
             <div class="text-lg bg-gray-500 text-white inline-block py-2 px-4 rounded">
                 <p class="mb-0">Amount Pending: {{ currencyFormater( pendingAmount() ) }}</p>
             </div>
@@ -303,8 +351,8 @@
                 <div class="flex space-x-2 items-center">
 
                     
-                    <button v-if="showWelcomeEmailBtn()" @click.prevent="sendEmail(client.id)" :class="[client.welcome_email_sent ? 'btn-danger' : 'btn-warning']" class="btn btn-warning">
-                        {{ client.welcome_email_sent ? 'Resend' : 'Send' }} Welcome Email
+                    <button v-if="showWelcomeEmailBtn()" @click.prevent="sendEmail(client.id)" :class="[ welcomeEmailsDatesSent().length > 0 ? 'btn-danger' : 'btn-warning']" class="btn btn-warning">
+                        {{ welcomeEmailsDatesSent().length > 0 ? 'Resend' : 'Send' }} Welcome Email
                     </button>
 
                     <button v-else-if="client.status !== 'cancelled'" @click.prevent="createPayment" class="btn btn-info">
@@ -324,80 +372,64 @@
                 </div>
                 
             </div>
-            <div class="mb-10 flex justify-end">
+            <div v-if="welcomeEmailPaymentExists()" class="mb-10 flex justify-end">
                 <a @click.prevent="viewWelcomeEmail" href="#">View Welcome Email</a>
             </div>
+            <div v-else class="mb-10 flex justify-end text-white relative"><span class="absolute w-full h-full bg-white z-20"></span>View Welcome Email</div>
+            
 
             <div id="client-info-container" class="flex">
-
+                
                 <div id="client-info" class="w-1/2">
                     <h2 class="mb-2">Client Information</h2>
                     <div class="border-b-2 border-gray-300 w-8/12">
                         <p><span>Name:</span> {{ client.name }}</p>
                         <p><span>Email:</span> <a :href="'mailto:'+client.email">{{ client.email }}</a></p>
                         <p><span>Phone:</span> {{ phoneNumberFormat(client.phone) }}</p>
-
+                        <p>Preferred Method: {{ client.payment_option }}</p>
                         <p><span>Domain(s):</span></p>
                         <p v-for="domain in client.domains" :key="domain">
                             <a target="_blank" :href="`https://${domain}`">{{ domain }}</a>
                         </p>
 
                         <p><span>Location:</span> {{ client.location }}</p>
-                        <div class="mt-2">
-                        <p>Created: {{  client.createdAt }}</p>
-                        <p>Updated: {{  client.updatedAt  }}</p>
+                        
                     </div>
+
+                    <div class="mt-2 border-b border-gray-400 inline-block">
+                        <h3 class="my-4">Created and Updated</h3>
+                        <p>Created: {{  client.created_at }}</p>
+                        <p>Updated: {{  client.updated_at  }}</p>
                     </div>
                      
-
-                        <div v-if="initialPaymentStatus().status === 'pending'">
+                        <div>
                             <h3 class="my-4">Welcome Email Sent Count: {{ welcomeEmailsDatesSent().length }}</h3>
                             <p v-if="welcomeEmailsDatesSent().length !== 0" v-for="(dateSent, i) in welcomeEmailsDatesSent()" :key="i">Date Sent: {{ dateSent }}</p>
                             <p v-else class="bg-yellow-500 text-white inline-block text-center py-2 px-4 mt-6">Welcome Email Not Sent Yet</p>
                         </div>
-                        <div v-else-if="initialPaymentStatus().status === 'paid'">
-                            <p class="bg-green-500 text-white inline-block text-center py-2 px-4 mt-6">Initial Payment Paid</p>
-                            <p>Date Paid: {{ initialPaymentStatus().updated }}</p>
-                        </div>
-                        <div v-else-if="initialPaymentStatus() === 'Void'">
-                            <p class="bg-gray-700 text-white inline-block text-center py-2 px-4 mt-6">Initial Payment Voided</p>
-                            <p>Date Voided: {{ initialPaymentStatus().updated }}</p>
-                        </div>
-                 
 
                     
-                    
-
                 </div>
                 <!-- #/client-info  -->
 
                 
                 
-                <div id="client-details" class="w-1/2">
-
-                    <div :class="hostingClassObj" class="inline-block py-2 px-4 rounded my-4">
-                        <h3>Hosting: {{ client.hosting }}</h3>
+                <div id="client-details" class="w-1/2 flex flex-col justify-between">
+                    <div>
+                        <div :class="adCampaignStatusClassObj" class="inline-block py-2 px-4 rounded">
+                            <h3>Ad Campaign: {{ client.ad_campaign_status }}</h3>
+                        </div>
                     </div>
-                    <div class="mt-4 mb-12">
+
+                    <div class="mt-8 mb-12">
                         <h2>Purchased Pro. Emails</h2>
                         <p v-if="client.pro_emails.length" v-for="(pro_email, key) in client.pro_emails" :key="key"> {{ pro_email }}</p>
                         <p v-else><span class="bg-gray-700 text-white py-2 px-4">No Professional Emails Ordered</span></p>
                     </div>
-
-
-                    <div id="payment-info" class="border-b-2 border-gray-200 mb-4">
-                        <h2 class="mb-2">Payment Information</h2>
-                        <p>Preferred Method: {{ client.payment_option }}</p>
-                        <p>Deposit: {{ currencyFormater(client.deposit) }}</p>
-                        <div v-if="client.payment_option === 'Credit Card'">
-                            <p>Processing Fee: {{ currencyFormater(client.deposit * .034) }}</p>
-                        </div>
-                        <p>Initial Quote: {{ currencyFormater(client.quote) }}</p>
-                    </div>
-
+                    
                     <div>
                         <h2>Website Details:</h2>
-                        <div class="border p-4 min-h-52">
+                        <div class="border p-4 min-h-72">
                             <p>{{ client.details }}</p>
                         </div>
                     </div>
@@ -417,12 +449,46 @@
             <h2 class="block border-none">Client Payments</h2>
     
             <section v-if="payments.length !== 0">
+
+                <div>
+                    <h3 class="mb-4">Subscriptions</h3>
+                    <table v-if="recurringPayments().length !== 0" id="recurring-payments" class="table-fixed border-collapse border w-full">
+                        <thead class="bg-green-300">
+                            <tr>
+                                <th>Date Issued</th>
+                                <th>Invoice Id</th>
+                                <th>Amount</th>
+                                <th>For</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            <tr v-for="payment in recurringPayments()" @click.prevent="viewPayment(payment.id)"  class="text-center">
+                                <td>{{payment.created_at }}</td>
+                                <td>{{ payment.invoice_id }}</td>
+                                <td>{{ payment.payment_method === 'Credit Card' ? currencyFormater(payment.card_amount) :  currencyFormater(payment.amount) }}</td>
+                                <td :class="{'bg-yellow-200' : payment.payment_welcome_email}">{{ payment.for }}</td>
+                                <td><span :class="statusBg(payment)" class="rounded-lg capitalize py-1 w-1/2 block mx-auto text-white">{{ payment.status }}</span></td>
+                               
+                                
+                            </tr>
+
+                        </tbody>
+                    </table>
+                    <div v-else class="bg-yellow-500 text-white text-center py-4">
+                        No Active Subscriptions
+                    </div>
+                </div>
+            <!-- subscriptions payments  -->
+
+            <span class="mt-8 mb-4 border-b-4 border-gray-500 block"></span>
+
                 <div>
                     <h3 class="mb-4">Pending</h3>
                     <table v-if="paymentsPending()" id="pending-payments" class="table-fixed border-collapse border w-full">
                         <thead class="bg-green-300">
                             <tr>
-                                <th>Name</th>
                                 <th>Date Issued</th>
                                 <th>Invoice Id</th>
                                 <th>Amount</th>
@@ -433,11 +499,10 @@
                         <tbody>
 
                             <tr v-for="payment in paymentsPending()" @click.prevent="viewPayment(payment.id)"  class="text-center">
-                                <td>{{ client.name }}</td>
-                                <td>{{ createdAtDate(payment.created_at) }}</td>
+                                <td>{{payment.created_at }}</td>
                                 <td>{{ payment.invoice_id }}</td>
                                 <td>{{ payment.payment_method === 'Credit Card' ? currencyFormater(payment.card_amount) :  currencyFormater(payment.amount) }}</td>
-                                <td :class="{'text-white bg-yellow-500': payment.initial_payment}">{{ payment.for }}</td>
+                                <td :class="{'bg-yellow-200' : payment.payment_welcome_email}">{{ payment.for }}</td>
                                 <td><span :class="statusBg(payment)" class="rounded-lg capitalize py-1 w-1/2 block mx-auto text-white">{{ payment.status }}</span></td>
                                
                                 
@@ -454,12 +519,12 @@
                 <span class="mt-8 mb-4 border-b-4 border-gray-500 block"></span>
 
                 <h2 class="text-center block mt-8">Payment Archives</h2>
-                <div class="mt-8">
+                <div class="mt-8 pb-4">
                     <h3 class="mb-4">Paid</h3>
                     <table v-if="paymentsPaid()" id="-payments" class="table-fixed border-collapse border w-full">
                         <thead class="bg-green-300">
                             <tr>
-                                <th>Name</th>
+                               
                                 <th>Date Issued</th>
                                 <th>Invoice Id</th>
                                 <th>Amount</th>
@@ -470,11 +535,11 @@
                         <tbody>
 
                             <tr v-for="payment in paymentsPaid()" @click.prevent="viewPayment(payment.id)"  class="text-center">
-                                <td>{{ client.name }}</td>
-                                <td>{{ createdAtDate(payment.created_at) }}</td>
+                               
+                                <td>{{ payment.created_at }}</td>
                                 <td>{{ payment.invoice_id }}</td>
                                 <td>{{ payment.payment_method === 'Credit Card' ? currencyFormater(payment.card_amount) :  currencyFormater(payment.amount) }}</td>
-                                <td :class="{'text-white bg-yellow-500': payment.initial_payment}">{{ payment.for }}</td>
+                                <td :class="{'bg-yellow-200' : payment.payment_welcome_email}">{{ payment.for }}</td>
                                 <td><span :class="statusBg(payment)" class="rounded-lg capitalize py-1 w-1/2 block mx-auto text-white">{{ payment.status }}</span></td>
                             </tr>
 
@@ -488,12 +553,12 @@
 
 
                 
-                <div class="mt-8">
+                <div class="mt-8 border-t border-gray-400 py-8">
                     <h3 class="mb-4">Void</h3>
                     <table v-if="paymentsVoid()" id="-payments" class="table-fixed border-collapse border w-full">
                         <thead class="bg-green-300">
                             <tr>
-                                <th>Name</th>
+                                
                                 <th>Date Issued</th>
                                 <th>Invoice Id</th>
                                 <th>Amount</th>
@@ -504,11 +569,11 @@
                         <tbody>
 
                             <tr v-for="payment in paymentsVoid()" @click.prevent="viewPayment(payment.id)"  class="text-center">
-                                <td>{{ client.name }}</td>
-                                <td>{{ createdAtDate(payment.created_at) }}</td>
+                                
+                                <td>{{ payment.created_at }}</td>
                                 <td>{{ payment.invoice_id }}</td>
                                 <td>{{ payment.payment_method === 'Credit Card' ? currencyFormater(payment.card_amount) :  currencyFormater(payment.amount) }}</td>
-                                <td :class="{'text-white bg-yellow-500': payment.initial_payment}">{{ payment.for }}</td>
+                                <td :class="{'bg-yellow-200' : payment.payment_welcome_email}">{{ payment.for }}</td>
                                 <td><span :class="statusBg(payment)" class="rounded-lg capitalize py-1 w-1/2 block mx-auto text-white">{{ payment.status }}</span></td>
                             </tr>
 

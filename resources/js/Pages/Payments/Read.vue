@@ -1,18 +1,29 @@
 <script setup>
     import MainLayout from '@/Layouts/MainLayout.vue';
-    import BtnComponent from '@/Components/Button.vue';
-    import { PlusCircleIcon } from '@heroicons/vue/24/solid';
-    import { usePage, Link, router } from '@inertiajs/vue3';
-    import phoneNumberFormat from '@/Utilities/phoneNumberFormater';
-    import MessageBanner from '@/Components/messageBanner.vue';
-    import moment from 'moment';
-    import { ref } from 'vue';
+    import { usePage, router } from '@inertiajs/vue3';
+    import { onBeforeMount } from 'vue';
     import currencyFormater from '@/Utilities/currencyFormater';
 
     const clients = usePage().props.clients;
     const payments = usePage().props.payments;
-    const filter = ref('payments');
+    const processing_fee = usePage().props.processing_fee;
 
+ 
+   
+
+
+    
+    function recurringPayments() {
+        const subscriptions =  payments.filter( payment => {
+          return  payment.frequency === 'recurring' && payment.status !== 'void';
+        } );
+
+
+        return subscriptions.length === 0 ?
+            [] :
+            subscriptions;
+
+    }
     
 // return all pending payments
 function paymentsPending() {
@@ -51,10 +62,6 @@ function paymentsPending() {
         return pendingPayments.length === 0 ? false : pendingPayments; 
 
     }//
-
-    function createdAtDate(createdDate) {
-       return moment(createdDate).format('MMMM Do YYYY');
-    }
     
 
     function statusBgClient(client) {
@@ -141,6 +148,77 @@ function paymentsPending() {
 
 }//===
 
+// FIX FOR TIME CHANGE FROM DB ==
+
+    onBeforeMount( () => {
+        const created_at = usePage().props.created_at;
+        const updated_at = usePage().props.updated_at;
+        const payments_created_at = usePage().props.payments_created_at;
+        payments['created_at'] =  created_at;
+        payments['updated_at'] = updated_at;
+        
+        
+        payments.forEach( ( payment, i ) => {
+
+            if(payment.id === payments_created_at[i].id) {
+                payment.created_at = payments_created_at[i].created_date;
+            } 
+
+        } );
+
+    } );
+// ==/
+
+
+    function subscriptionsAmount() {
+
+        let amount = 0;
+
+        payments.forEach(payment => {
+
+            
+            if(payment.frequency === 'recurring') {
+
+                if(payment.payment_method === 'Credit Card') {
+                    if(payment.status === 'paid') amount = amount + parseFloat(payment.card_amount);
+                } else {
+                    amount = amount + parseFloat(payment.amount);
+                }
+
+            }
+
+        });
+
+
+        return amount;
+
+    }//===
+
+
+    function estSubscriptionsPayout() {
+
+        let amount = 0;
+
+        payments.forEach(payment => {
+
+            
+            if(payment.frequency === 'recurring') {
+
+                if(payment.payment_method === 'Credit Card') {
+                    if(payment.status === 'paid') amount = (amount + parseFloat(payment.card_amount)) * (1 - processing_fee);
+                } else {
+                    amount = amount + parseFloat(payment.amount);
+                }
+
+            }
+
+        });
+
+
+        return amount;
+
+    }//===
+
 </script>
 
 
@@ -153,12 +231,14 @@ function paymentsPending() {
             <h1 class="text-2xl">Payments</h1>
         </div>
 
-        <MessageBanner :show="$page.props.flash.success" type="warning">
-            {{ $page.props.flash.success }}
-        </MessageBanner>
+       
+       
 
         <section class="flex justify-between items-center my-6">
-            
+            <div class="mb-4">
+                <p>Monthly Subscriptions: {{ currencyFormater(subscriptionsAmount()) }}</p>
+                <p>Est. Monthly Subscription Payout: {{ currencyFormater( estSubscriptionsPayout() ) }}</p>
+            </div>
             <div>
                 <p class="text-lg font-semibold">Total Pending Amount: {{ currencyFormater(pendingAmount()) }}</p>
             </div>
@@ -170,6 +250,45 @@ function paymentsPending() {
           
     
             <section v-if="payments.length !== 0">
+
+                
+                <div>
+                    <h3 class="mb-4">Subscriptions</h3>
+                    <table v-if="recurringPayments().length !== 0" id="recurring-payments" class="table-fixed border-collapse border w-full">
+                        <thead class="bg-green-300">
+                            <tr>
+                                <th>Name</th>
+                                <th>Date Issued</th>
+                                <th>Invoice Id</th>
+                                <th>Amount</th>
+                                <th>For</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            <tr v-for="payment in recurringPayments()" @click.prevent="viewPayment(payment.id)"  class="text-center">
+                                <td>{{ clientNamePaymentsShow(payment) }}</td>
+                                <td>{{payment.created_at }}</td>
+                                <td>{{ payment.invoice_id }}</td>
+                                <td>{{ payment.payment_method === 'Credit Card' ? currencyFormater(payment.card_amount) :  currencyFormater(payment.amount) }}</td>
+                                <td :class="{'bg-yellow-200' : payment.payment_welcome_email}">{{ payment.for }}</td>
+                                <td><span :class="statusBgPayments(payment)" class="rounded-lg capitalize py-1 w-1/2 block mx-auto text-white">{{ payment.status }}</span></td>
+                               
+                                
+                            </tr>
+
+                        </tbody>
+                    </table>
+                    <div v-else class="bg-yellow-500 text-white text-center py-4">
+                        No Active Subscriptions
+                    </div>
+                </div>
+            <!-- subscriptions payments  -->
+
+            <span class="mt-8 mb-4 border-b-4 border-gray-500 block"></span>
+
+
                 <div>
                     <h3 class="mb-4">Pending</h3>
                     <table v-if="paymentsPending()" id="pending-payments" class="table-fixed border-collapse border w-full">
@@ -187,7 +306,7 @@ function paymentsPending() {
 
                             <tr v-for="payment in paymentsPending()" @click.prevent="viewPayment(payment.id)"  class="text-center">
                                 <td>{{ clientNamePaymentsShow(payment) }}</td>
-                                <td>{{ createdAtDate(payment.created_at) }}</td>
+                                <td>{{ payment.created_at }}</td>
                                 <td>{{ payment.invoice_id }}</td>
                                 <td>{{ payment.payment_method === 'Credit Card' ? currencyFormater(payment.card_amount) :  currencyFormater(payment.amount) }}</td>
                                 <td :class="{'text-white bg-yellow-500': payment.initial_payment}">{{ payment.for }}</td>
@@ -224,7 +343,7 @@ function paymentsPending() {
 
                             <tr v-for="payment in paymentsPaid()" @click.prevent="viewPayment(payment.id)"  class="text-center">
                                 <td>{{ clientNamePaymentsShow(payment) }}</td>
-                                <td>{{ createdAtDate(payment.created_at) }}</td>
+                                <td>{{ payment.created_at }}</td>
                                 <td>{{ payment.invoice_id }}</td>
                                 <td>{{ payment.payment_method === 'Credit Card' ? currencyFormater(payment.card_amount) :  currencyFormater(payment.amount) }}</td>
                                 <td :class="{'text-white bg-yellow-500': payment.initial_payment}">{{ payment.for }}</td>
@@ -258,7 +377,7 @@ function paymentsPending() {
 
                             <tr v-for="payment in paymentsVoid()" @click.prevent="viewPayment(payment.id)"  class="text-center">
                                 <td>{{ clientNamePaymentsShow(payment) }}</td>
-                                <td>{{ createdAtDate(payment.created_at) }}</td>
+                                <td>{{ payment.created_at }}</td>
                                 <td>{{ payment.invoice_id }}</td>
                                 <td>{{ payment.payment_method === 'Credit Card' ? currencyFormater(payment.card_amount) :  currencyFormater(payment.amount) }}</td>
                                 <td :class="{'text-white bg-yellow-500': payment.initial_payment}">{{ payment.for }}</td>
@@ -282,10 +401,6 @@ function paymentsPending() {
 
         </div>
         <!-- #/ payments-table -->
-
-        <!-- <section v-else class="bg-yellow-500 text-white text-center py-4">
-            No Clients Created
-        </section> -->
 
     </MainLayout>
 
