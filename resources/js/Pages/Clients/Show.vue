@@ -262,7 +262,7 @@
         
        
 
-        router.get(route('view.email'), {
+        router.post(route('view.email'), {
             'view': 'welcome_email',
             'client': client,
             'payment': welcomeEmailPayment

@@ -21,7 +21,8 @@ class SendEmailsController extends Controller
 
 
     public function viewEmail(Request $request) {
-      
+    
+
             $client = (object) $request->client;
             $payment = (object) $request->payment;
 

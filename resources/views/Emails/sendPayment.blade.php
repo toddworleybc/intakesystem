@@ -54,7 +54,11 @@
 
                     <p>{{ config('services.stripe.processing_fee') * 100 }}% Processing Fee:  {{ $payment->processing_fee ? "$".$payment->processing_fee : "0.00 free with " . "$".$payment->payment_method }}</p>
 
-                    <p style="font-weight: bold;">Total {{ $payment->frequency === "recurring" ? 'Monthly' : '' }} Payment Amount: {{ $payment->card_amount ? "$".$payment->card_amount : "$".$payment->amount }}</p>
+                    <p style="font-weight: bold;">Total Payment Amount Due: {{ $payment->card_amount ? "$".$payment->card_amount : "$".$payment->amount}}{{ $payment->frequency === 'recurring' ? "/mo" : "" }}</p>
+
+                    @if($payment->frequency === 'recurring')
+                        <p class="italic">This is a <strong>Monthly Subscription Fee</strong> do every month on the date paid.</p>
+                    @endif
 
                     @if ($payment->payment_method === 'Credit Card') 
                     <p style="margin-bottom: 8px;">Click Link To Pay With Card: <a href="{{ $payment->payment_link }}">Proceed with Purchase</a></p>

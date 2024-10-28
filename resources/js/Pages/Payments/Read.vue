@@ -6,6 +6,9 @@
 
     const clients = usePage().props.clients;
     const payments = usePage().props.payments;
+    const processing_fee = usePage().props.processing_fee;
+
+ 
    
 
 
@@ -191,6 +194,31 @@ function paymentsPending() {
 
     }//===
 
+
+    function estSubscriptionsPayout() {
+
+        let amount = 0;
+
+        payments.forEach(payment => {
+
+            
+            if(payment.frequency === 'recurring') {
+
+                if(payment.payment_method === 'Credit Card') {
+                    if(payment.status === 'paid') amount = (amount + parseFloat(payment.card_amount)) * (1 - processing_fee);
+                } else {
+                    amount = amount + parseFloat(payment.amount);
+                }
+
+            }
+
+        });
+
+
+        return amount;
+
+    }//===
+
 </script>
 
 
@@ -204,11 +232,12 @@ function paymentsPending() {
         </div>
 
        
+       
 
         <section class="flex justify-between items-center my-6">
             <div class="mb-4">
                 <p>Monthly Subscriptions: {{ currencyFormater(subscriptionsAmount()) }}</p>
-                <p>Est. Monthly Payout: {{ currencyFormater( subscriptionsAmount() * 0.965) }}</p>
+                <p>Est. Monthly Subscription Payout: {{ currencyFormater( estSubscriptionsPayout() ) }}</p>
             </div>
             <div>
                 <p class="text-lg font-semibold">Total Pending Amount: {{ currencyFormater(pendingAmount()) }}</p>

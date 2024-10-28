@@ -32,7 +32,7 @@ use App\Models\Payment;
     Route::post('/send-receipt', [SendEmailsController::class, 'sendReceipt'])->name('receipt.send');
 
 
-    Route::get('/view-email', [SendEmailsController::class, 'viewEmail'])->name('view.email');
+    Route::post('/view-email', [SendEmailsController::class, 'viewEmail'])->name('view.email');
 
     
 // Arcives------------------------/

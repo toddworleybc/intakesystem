@@ -166,7 +166,7 @@
 
 
     function viewPaymentEmail() {
-        router.get(route('view.email'), {
+        router.post(route('view.email'), {
             'view': 'payment_email',
             'client': payment.client,
             'payment': payment
@@ -174,7 +174,7 @@
     }
 
     function viewReceiptEmail() {
-        router.get(route('view.email'), {
+        router.post(route('view.email'), {
             'view': 'receipt_email',
             'client': payment.client,
             'payment': payment

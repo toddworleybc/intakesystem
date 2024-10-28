@@ -25,6 +25,8 @@ class PaymentController extends Controller
 
         $payments = Payment::all();
         $payments_created_at = [];
+        $processing_fee = (float) config('services.stripe.processing_fee');
+
 
         foreach($payments as $payment) {
             $payments_created_at[] = [
@@ -38,7 +40,8 @@ class PaymentController extends Controller
         return inertia('Payments/Read', [
             'payments' => Payment::all(),
             'clients' => Clients::all(),
-            'payments_created_at' => $payments_created_at
+            'payments_created_at' => $payments_created_at,
+            'processing_fee' => $processing_fee
         ]);
 
 

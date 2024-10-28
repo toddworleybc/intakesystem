@@ -39,12 +39,12 @@
     }//
 
 
-    function searchClientsByName() {
+    function searchClientsByEmail() {
 
       
         returnClients.value = searchInputValue.value !== "" ? 
 
-                    clients.filter( client => activeClients(client) && client.name.includes(searchInputValue.value) ) :
+                    clients.filter( client => activeClients(client) && client.email.includes(searchInputValue.value) ) :
 
                     clients.filter(client => activeClients(client));
 
@@ -54,7 +54,7 @@
 
 
     onMounted( () => 
-        searchClientsByName()
+        searchClientsByEmail()
     );
         
     
@@ -80,8 +80,7 @@
         <section class="flex justify-between items-center my-6">
             
             <div>
-                <p>Search Clients by Name <br/><span class="italic">(note* capitalizing matters)</span></p>
-                <input class="rounded w-80" v-model="searchInputValue" type="text" id="search-name" @keyup="searchClientsByName">
+                <input class="rounded w-80" v-model="searchInputValue" placeholder="Search Clients by Email" type="text" id="search-name" @keyup="searchClientsByEmail">
             </div>
             <div>
                 <BtnComponent :link="route('clients.create')">
