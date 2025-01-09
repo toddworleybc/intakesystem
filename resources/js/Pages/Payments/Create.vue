@@ -88,6 +88,7 @@ function setQuoteInput(e) {
                     <div>
                         <h2 class="border-b pb-2">Payment to: {{ client.name }}</h2>
                         <p>Sending to: <a :href="'mailto:' + client.email">{{ client.email }}</a></p>
+                        <p>Payment Method: {{ client.payment_option }}</p>
                     </div>
                     <div v-if="checkIfEmailPaymentExists()">
                         <input type="checkbox" class="mr-4" v-model="form.payment_welcome_email"  id="payment_welcome_email">

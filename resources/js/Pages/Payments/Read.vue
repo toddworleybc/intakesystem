@@ -267,7 +267,7 @@ function paymentsPending() {
                         </thead>
                         <tbody>
 
-                            <tr v-for="payment in recurringPayments()" @click.prevent="viewPayment(payment.id)"  class="text-center">
+                            <tr v-for="payment in recurringPayments().reverse()" @click.prevent="viewPayment(payment.id)"  class="text-center">
                                 <td>{{ clientNamePaymentsShow(payment) }}</td>
                                 <td>{{payment.created_at }}</td>
                                 <td>{{ payment.invoice_id }}</td>
@@ -304,7 +304,7 @@ function paymentsPending() {
                         </thead>
                         <tbody>
 
-                            <tr v-for="payment in paymentsPending()" @click.prevent="viewPayment(payment.id)"  class="text-center">
+                            <tr v-for="payment in paymentsPending().reverse()" @click.prevent="viewPayment(payment.id)"  class="text-center">
                                 <td>{{ clientNamePaymentsShow(payment) }}</td>
                                 <td>{{ payment.created_at }}</td>
                                 <td>{{ payment.invoice_id }}</td>
@@ -341,7 +341,7 @@ function paymentsPending() {
                         </thead>
                         <tbody>
 
-                            <tr v-for="payment in paymentsPaid()" @click.prevent="viewPayment(payment.id)"  class="text-center">
+                            <tr v-for="payment in paymentsPaid().reverse()" @click.prevent="viewPayment(payment.id)"  class="text-center">
                                 <td>{{ clientNamePaymentsShow(payment) }}</td>
                                 <td>{{ payment.created_at }}</td>
                                 <td>{{ payment.invoice_id }}</td>
@@ -375,7 +375,7 @@ function paymentsPending() {
                         </thead>
                         <tbody>
 
-                            <tr v-for="payment in paymentsVoid()" @click.prevent="viewPayment(payment.id)"  class="text-center">
+                            <tr v-for="payment in paymentsVoid().reverse()" @click.prevent="viewPayment(payment.id)"  class="text-center">
                                 <td>{{ clientNamePaymentsShow(payment) }}</td>
                                 <td>{{ payment.created_at }}</td>
                                 <td>{{ payment.invoice_id }}</td>

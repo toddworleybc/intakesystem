@@ -67,12 +67,22 @@ class SendEmailsController extends Controller
        
 
         $client = Clients::find($request->id);
-        $welcomeEmailPayment = $client->payments()->where("payment_welcome_email", 1)->first();
+        $payment = $client->payments()->where("payment_welcome_email", 1)->first();
      
+        $nonConverted = $payment; // non converted payment for set payment count
+       
+
+        $payment->amount = Number::currency($payment->amount);
+
+        if($payment->payment_method === 'Credit Card') {
+            $payment->card_amount = Number::currency($payment->card_amount);
+            $payment->processing_fee = Number::currency($payment->processing_fee);
+        }
 
 
     // Send Email
-       $welcomeEmailSent = Mail::to($client->email)->send(new WelcomeEmail($client, $welcomeEmailPayment));
+       $welcomeEmailSent = Mail::to($client->email)->send(new WelcomeEmail($client, $payment));
+
 
 
         if($welcomeEmailSent) {
@@ -80,8 +90,8 @@ class SendEmailsController extends Controller
                 $client->welcome_email_sent_count = $this->setWelcomeEmailSentCount($client);
 
 
-            // add payment count
-                    $this->setPaymentSentCount($welcomeEmailPayment);
+            // add sent payment count
+                $this->setPaymentSentCount($nonConverted);            
         
         }
 

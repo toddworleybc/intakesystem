@@ -138,6 +138,13 @@ class PaymentController extends Controller
         $payment['client_payments'] = $payment['client']->payments;
         $created_at = $payment->created_at;
         $updated_at = $payment->updated_at;
+
+        $payment->amount = Number::currency($payment->amount);
+
+        if($payment->payment_method === 'Credit Card') {
+            $payment->card_amount = Number::currency($payment->card_amount);
+            $payment->processing_fee = Number::currency($payment->processing_fee);
+        }
         
         // dd($payment);
         return inertia("Payments/Show", [
@@ -145,10 +152,6 @@ class PaymentController extends Controller
             'created_at' => $created_at,
             'updated_at' => $updated_at
         ]);
-
-        // return Inertia::render("Payments/Show", [
-        //     'payment' => $payment
-        // ]);
     }
 
     /**
