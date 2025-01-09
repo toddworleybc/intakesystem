@@ -8,6 +8,7 @@
     import Loader from '@/Utilities/loader.js';
     import currencyFormater from '@/Utilities/currencyFormater';
     import phoneNumberFormat from '@/Utilities/phoneNumberFormater';
+    
 
 
 
@@ -464,7 +465,7 @@
                         </thead>
                         <tbody>
 
-                            <tr v-for="payment in recurringPayments()" @click.prevent="viewPayment(payment.id)"  class="text-center">
+                            <tr v-for="payment in recurringPayments().reverse()" @click.prevent="viewPayment(payment.id)"  class="text-center">
                                 <td>{{payment.created_at }}</td>
                                 <td>{{ payment.invoice_id }}</td>
                                 <td>{{ payment.payment_method === 'Credit Card' ? currencyFormater(payment.card_amount) :  currencyFormater(payment.amount) }}</td>
@@ -498,7 +499,7 @@
                         </thead>
                         <tbody>
 
-                            <tr v-for="payment in paymentsPending()" @click.prevent="viewPayment(payment.id)"  class="text-center">
+                            <tr v-for="payment in paymentsPending().reverse()" @click.prevent="viewPayment(payment.id)"  class="text-center">
                                 <td>{{payment.created_at }}</td>
                                 <td>{{ payment.invoice_id }}</td>
                                 <td>{{ payment.payment_method === 'Credit Card' ? currencyFormater(payment.card_amount) :  currencyFormater(payment.amount) }}</td>
@@ -534,7 +535,7 @@
                         </thead>
                         <tbody>
 
-                            <tr v-for="payment in paymentsPaid()" @click.prevent="viewPayment(payment.id)"  class="text-center">
+                            <tr v-for="payment in paymentsPaid().reverse()" @click.prevent="viewPayment(payment.id)"  class="text-center">
                                
                                 <td>{{ payment.created_at }}</td>
                                 <td>{{ payment.invoice_id }}</td>
@@ -568,7 +569,7 @@
                         </thead>
                         <tbody>
 
-                            <tr v-for="payment in paymentsVoid()" @click.prevent="viewPayment(payment.id)"  class="text-center">
+                            <tr v-for="payment in paymentsVoid().reverse()" @click.prevent="viewPayment(payment.id)"  class="text-center">
                                 
                                 <td>{{ payment.created_at }}</td>
                                 <td>{{ payment.invoice_id }}</td>

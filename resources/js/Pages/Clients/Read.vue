@@ -6,6 +6,8 @@
     import phoneNumberFormat from '@/Utilities/phoneNumberFormater';
     import MessageBanner from '@/Components/messageBanner.vue';
     import { onMounted, ref } from 'vue';
+    
+
 
    const clients = usePage().props.clients;
    const returnClients = ref([]);

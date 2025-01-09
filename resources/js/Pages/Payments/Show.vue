@@ -6,7 +6,6 @@
     import { computed, onBeforeMount, ref, onMounted } from 'vue';
     import { router, usePage, useForm } from '@inertiajs/vue3';
     import Loader from '@/Utilities/loader.js';
-    import currencyFormater from '@/Utilities/currencyFormater';
     
 
     const payment = usePage().props.payment;
@@ -268,7 +267,7 @@
             <div class="border-b-2 border-gray-500 pb-2 mb-2 flex justify-between items-end">
                 <div>
                     <div class="text-lg bg-gray-500 text-white inline-block py-2 px-4 rounded">
-                        <p class="mb-0">Payment Amount: {{ payment.payment_method === 'Credit Card' ? currencyFormater(payment.card_amount) : currencyFormater(payment.amount) }}</p>
+                        <p class="mb-0">Payment Amount: {{ payment.payment_method === 'Credit Card' ? payment.card_amount : payment.amount }}</p>
                     </div>
                     <div>
                         <div :class="statusClassObj" class="text-sm mt-4 text-center text-white py-1 px-2 rounded inline-block">
@@ -291,31 +290,13 @@
                 </div>
                 
                 
-
-                <div v-if="payment.status !== 'paid'" class="flex space-x-2 items-center">
-
-                    <div v-if="payment.status === 'void'" class="bg-gray-500 text-white py-2 px-4 rounded">
-                        Void Payment
-                    </div>
-
-
-                    <BtnComponent v-else-if="paymentDatesSent().length === 0 && !payment.payment_welcome_email"  link="#" @click.prevent="sendPayment" >
-                       Send Payment
-                    </BtnComponent>
-
-                    <BtnComponent v-else-if="paymentDatesSent().length !== 0 && !payment.payment_welcome_email" type="danger"  link="#" @click.prevent="sendPayment" >
-                       Resend Payment
-                    </BtnComponent>
-
-                    <div v-else class="bg-yellow-500 text-white py-2 px-4 rounded">
-                       Client Send Welcome Email
-                    </div>
-
+                <button v-if="payment.status === 'pending'" class="btn btn-safe mt-4" @click.prevent="updatePaymentStatus">
+                    Update Payment
+                </button>
+                <div v-else class="bg-gray-800 text-white pt-2 px-5">
+                    <p>Payment Archived</p>
                 </div>
 
-                <BtnComponent v-else type="warning"  link="#" @click.prevent="receiptSend" >
-                       Send Receipt
-                </BtnComponent>
                 
             </div>
 
@@ -346,12 +327,12 @@
                         <p><span>To:</span> {{ payment.client.name }}</p>
                         <p><span>Sent To Email:</span> <a :href="'mailto:'+payment.client.email">{{ payment.client.email }}</a></p>
                         <p><span>Payment Method:</span> {{ payment.payment_method }}</p>
-                        <p><span>Amount:</span> {{ currencyFormater(payment.amount) }}</p>
+                        <p><span>Amount:</span> {{ payment.amount }}</p>
                         
 
                         <div v-if="payment.payment_method === 'Credit Card'">
-                            <p><span>Processing Fee:</span> {{ currencyFormater(payment.processing_fee) }}</p>
-                            <p><span>Card Amount:</span> {{ currencyFormater(payment.card_amount) }}</p>
+                            <p><span>Processing Fee:</span> {{ payment.processing_fee }}</p>
+                            <p><span>Card Amount:</span> {{ payment.card_amount }}</p>
                             <p><span>Payment Link:</span> <a :href="payment.payment_link" target="_blank">{{ payment.payment_link }}</a></p>
                         </div>
                        
@@ -363,27 +344,50 @@
                             <p>Updated: {{  payment.updated_at  }}</p>
                         </div>
                     </div>
-                    <div v-if="receiptSentDates().length === 0">
+                    <div class="border-b-2 mb-6 w-8/12" v-if="receiptSentDates().length === 0">
                         <h3 class="my-4">Payment Sent Count: {{ paymentDatesSent().length }}</h3>
 
                         <p v-if="paymentDatesSent().length !== 0" v-for="(dateSent, i) in paymentDatesSent()" :key="i">Date Sent: {{ dateSent }}</p>
-                        <p v-else class="bg-yellow-500 text-white inline-block text-center py-2 px-4 mt-6">Payment Not Sent Yet</p>
+                        <p v-else class="bg-yellow-500 text-white inline-block text-center py-2 px-4">Payment Not Sent Yet</p>
                     </div>
 
-                    <div v-else>
+                    <div class="border-b-2 mb-6 w-8/12" v-else>
                         <h3 class="my-4">Receipt Sent Count: {{ receiptSentDates().length }}</h3>
 
 
                         <p class="border-b-2 pb-6 inline-block" v-if="receiptSentDates().length !== 0" v-for="(dateSent, i) in receiptSentDates()" :key="i">Date Sent: {{ dateSent }}</p>
-                        <p v-else class="bg-yellow-500 text-white inline-block text-center py-2 px-4 mt-6 border-b-2 border-gray">Receipt Not Sent Yet</p>
+                        <p v-else class="bg-yellow-500 text-white inline-block text-center py-2 px-4 border-b-2 border-gray">Receipt Not Sent Yet</p>
                        
                         <h3 class="my-4">Payment Sent Dates {{ paymentDatesSent().length }}</h3>
 
                         <p v-if="paymentDatesSent().length !== 0" v-for="(dateSent, i) in paymentDatesSent()" :key="i">Date Sent: {{ dateSent }}</p>
-                        <p v-else class="bg-yellow-500 text-white inline-block text-center py-2 px-4 mt-6">Payment Not Sent Yet</p>
+                        <p v-else class="bg-yellow-500 text-white inline-block text-center py-2 px-4">Payment Not Sent Yet</p>
                     </div>
                    
-                   
+                    <div v-if="payment.status !== 'paid'" class="flex space-x-2 items-center">
+
+                        <div v-if="payment.status === 'void'" class="bg-gray-500 text-white py-2 px-4 rounded">
+                            Void Payment
+                        </div>
+
+
+                        <BtnComponent v-else-if="paymentDatesSent().length === 0 && !payment.payment_welcome_email"  link="#" @click.prevent="sendPayment" >
+                        Send Payment
+                        </BtnComponent>
+
+                        <BtnComponent v-else-if="paymentDatesSent().length !== 0 && !payment.payment_welcome_email" type="danger"  link="#" @click.prevent="sendPayment" >
+                        Resend Payment
+                        </BtnComponent>
+
+                        <div v-else class="bg-yellow-500 text-white py-2 px-4 rounded">
+                        Client Send Welcome Email
+                        </div>
+
+                    </div>
+
+                    <BtnComponent v-else type="warning"  link="#" @click.prevent="receiptSend" >
+                    Send Receipt
+                    </BtnComponent>
                     
                 </div>
                 <!-- #/payment-info  -->
@@ -450,10 +454,10 @@
                     </div>
                         
                     
-                        <button v-if="payment.status === 'pending'" class="btn btn-safe mt-4" @click.prevent="updatePaymentStatus">
+                        <!-- <button v-if="payment.status === 'pending'" class="btn btn-safe mt-4" @click.prevent="updatePaymentStatus">
                                 Update Payment
                             </button>
-                            
+                             -->
                            
 
                 </div>

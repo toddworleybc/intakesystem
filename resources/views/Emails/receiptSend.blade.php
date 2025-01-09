@@ -35,25 +35,25 @@
 
         <div style="border-bottom: 2px solid #cbd5e1;">
         
-            <h4>Amount Paid: {{ $payment->payment_method === 'Credit Card' ? "$".$payment->card_amount : "$".$payment->amount }}</h4>
+            <h4>Amount Paid: {{ $payment->payment_method === 'Credit Card' ? $payment->card_amount : $payment->amount }}</h4>
             <p>For: {{ $payment->for }}</p>
 
             <div>
                 
                 <div>
                     <p>Invoice Id: <strong>{{ $payment->invoice_id }}</strong></p>
-                    <p>Payment Frequency: {{ $payment->frequency === 'one_time' ? "One Time Payment" : "$$payment->amount Monthly" }}</p>
+                    <p>Payment Frequency: {{ $payment->frequency === 'one_time' ? "One Time Payment" : "$payment->amount Monthly" }}</p>
 
                     <p>{{$payment->frequency === 'one_time' ? 'Preferred' : ''}} Payment Method: {{ $payment->payment_method }}</p>
 
                     @if ($payment->payment_method === 'Credit Card' && $payment->frequency === 'one_time') 
                     <p style="font-style: italic;">Note: Payment with credit card adds a {{ config('services.stripe.processing_fee') * 100 }}% processing fee.</p>
-                    <p>Amount Charged: {{ "$".$payment->amount }}</p>
+                    <p>Amount Charged: {{ $payment->amount }}</p>
                     @endif
 
-                    <p>{{ config('services.stripe.processing_fee') * 100 }}% Processing Fee:  {{ $payment->processing_fee ? "$".$payment->processing_fee : "- 0.00 free with " . $payment->payment_method }}</p>
+                    <p>{{ config('services.stripe.processing_fee') * 100 }}% Processing Fee:  {{ $payment->processing_fee ? $payment->processing_fee : "- 0.00 free with " . $payment->payment_method }}</p>
 
-                    <p style="font-weight: bold;">Total Payment Amount Due: {{ $payment->card_amount ? "$".$payment->card_amount : "$".$payment->amount}}{{ $payment->frequency === 'recurring' ? "/mo" : "" }}</p>
+                    <p style="font-weight: bold;">Total Payment Amount Due: {{ $payment->card_amount ? $payment->card_amount : $payment->amount}}{{ $payment->frequency === 'recurring' ? "/mo" : "" }}</p>
 
                     @if($payment->frequency === 'recurring')
                         <p class="italic">This is a <strong>Monthly Subscription Fee</strong> do every month on the date paid.</p>

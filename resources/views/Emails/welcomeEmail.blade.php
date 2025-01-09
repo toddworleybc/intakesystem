@@ -57,11 +57,11 @@
                     <p style="font-style: italic;">Note: Payment with credit card adds a {{config("services.stripe.processing_fee") * 100}}% processing fee.</p>
                     @endif
 
-                    <p>Amount: {{ "$".$payment->amount }}</p>
+                    <p>Amount: {{ $payment->amount }}</p>
 
-                    <p>{{ config('services.stripe.processing_fee') * 100 }}% Processing Fee:  {{ $payment->processing_fee ? "$".$payment->processing_fee : "$0.00 - free with " . $payment->payment_method }}</p>
+                    <p>{{ config('services.stripe.processing_fee') * 100 }}% Processing Fee:  {{ $payment->processing_fee ? $payment->processing_fee : "$0.00 - free with " . $payment->payment_method }}</p>
 
-                    <p style="font-weight: bold;">Total Payment Amount Due: {{ $payment->card_amount ? "$".$payment->card_amount : "$".$payment->amount}}{{ $payment->frequency === 'recurring' ? "/mo" : "" }}</p>
+                    <p style="font-weight: bold;">Total Payment Amount Due: {{ $payment->card_amount ? $payment->card_amount : $payment->amount}}{{ $payment->frequency === 'recurring' ? "/mo" : "" }}</p>
 
                     @if($payment->frequency === 'recurring')
                         <p class="italic">This is a <strong>Monthly Subscription Fee</strong> do every month on the date paid.</p>
@@ -93,7 +93,7 @@
                     <p>Phone: {{ $client->phone }}</p>
                     <p>Email: {{ $client->email }}</p>
                     <p>Location: {{ $client->location }}</p>
-                    <p>Payment Amount: {{ $client->payment_option === 'Credit Card' ? "$".$payment->card_amount : "$".$payment->amount }}</p>
+                    <p>Payment Amount: {{ $client->payment_option === 'Credit Card' ? $payment->card_amount : $payment->amount }}</p>
                     <p>Details: {{ $client->details }}</p> 
 
                 </div>
