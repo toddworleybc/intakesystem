@@ -84,11 +84,10 @@ class ClientsController extends Controller
     public function show(Clients $clients, $id)
 
     {   
-        
-        // dd(now());
+    
 
         $client = $clients->find($id);
-        $payments = array_reverse($client->payments->all());
+        $payments = $client->payments->all(); 
 
         $dateTest = now('UTC')->format($client->created_at);
         $created_at = $client->created_at;

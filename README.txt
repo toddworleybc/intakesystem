@@ -1,3 +1,7 @@
+Version 1.2.1
+- Fixed Card Amounts to remove "$"
+- Removed instructions from welcome email 
+
 Version 1.2
 - Changed Send Payment button and Update Payment button
 - Fixed double "$" in Emails

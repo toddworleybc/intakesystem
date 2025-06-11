@@ -556,7 +556,7 @@
                 
                 <div class="mt-8 border-t border-gray-400 py-8">
                     <h3 class="mb-4">Void</h3>
-                    <table v-if="paymentsVoid()" id="-payments" class="table-fixed border-collapse border w-full">
+                    <table v-if="paymentsVoid()" id="payments" class="table-fixed border-collapse border w-full">
                         <thead class="bg-green-300">
                             <tr>
                                 

@@ -95,16 +95,18 @@ class PaymentController extends Controller
         if($client["payment_option"] === "Credit Card" || $recurringPayment) {
 
         // add processing fee
-            $request["processing_fee"] = Number::format(($request->amount * config('services.stripe.processing_fee')), precision: 2);
+            $request["processing_fee"] = $request->amount * config('services.stripe.processing_fee');
 
         // add card amount
-            $request["card_amount"] = Number::format(($request->amount + $request->processing_fee), precision: 2);
+            $request["card_amount"] = $request->amount + $request->processing_fee;
 
 
         // add and create payment link
             $request["payment_link"] = $this->CreatePaymentLink($request);
 
         }
+
+        
 
 // Create the payment
         $paymentCreated = $client->payments()->create($request->all());
@@ -146,7 +148,7 @@ class PaymentController extends Controller
             $payment->processing_fee = Number::currency($payment->processing_fee);
         }
         
-        // dd($payment);
+       
         return inertia("Payments/Show", [
             'payment' => $payment,
             'created_at' => $created_at,
@@ -211,6 +213,7 @@ class PaymentController extends Controller
         $stripe = config("app.env") === "local" ? 
             new \Stripe\StripeClient(config('services.stripe.test')) : 
             new \Stripe\StripeClient(config('services.stripe.live'));
+
 
     // set card ammount format
         $card_amount = (int) ($order["card_amount"] * 100);
