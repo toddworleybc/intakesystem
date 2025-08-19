@@ -238,8 +238,6 @@ class SendEmailsController extends Controller
 
      private function setPaymentSentCount($payment) {
 
-        dd($payment);
-
         $paymentDates = $payment->payment_sent_count;
  
         $paymentDates[] = (string) now()->format("F jS, Y, g:i a");
