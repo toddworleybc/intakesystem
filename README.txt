@@ -1,3 +1,6 @@
+Version 1.2.2
+- fixed NAN after sending welcome email
+
 Version 1.2.1
 - Fixed Card Amounts to remove "$"
 - Removed instructions from welcome email 

@@ -335,6 +335,7 @@
             </div>
             <div class="text-lg bg-gray-500 text-white inline-block py-2 px-4 rounded">
                 <p class="mb-0">Amount Pending: {{ currencyFormater( pendingAmount() ) }}</p>
+               
             </div>
             
             <div class="border-b-2 border-gray-500 pb-2 mb-2 flex justify-between items-end">

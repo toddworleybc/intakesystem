@@ -89,9 +89,9 @@ class SendEmailsController extends Controller
             // set welcome email sent count
                 $client->welcome_email_sent_count = $this->setWelcomeEmailSentCount($client);
 
-
-            // add sent payment count
-                $this->setPaymentSentCount($nonConverted);            
+           
+            // add sent payment count 
+                $this->setPaymentSentCount($nonConverted->getOriginal());            
         
         }
 
@@ -169,7 +169,7 @@ class SendEmailsController extends Controller
 
         $payment = Payment::find($request->id);
         $client = Clients::find($payment->clients_id);
-        // dd($payment);
+        
 // add sent count
         $this->setReceiptSentCount($payment);
  
@@ -237,6 +237,8 @@ class SendEmailsController extends Controller
 
 
      private function setPaymentSentCount($payment) {
+
+        dd($payment);
 
         $paymentDates = $payment->payment_sent_count;
  
