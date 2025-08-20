@@ -68,10 +68,10 @@ class SendEmailsController extends Controller
 
         $client = Clients::find($request->id);
         $payment = $client->payments()->where("payment_welcome_email", 1)->first();
-     
-        $nonConverted = $payment; // non converted payment for set payment count
-       
 
+        // non converted payment for set payment count
+        $nonConverted = Payment::find($payment->id);
+     
         $payment->amount = Number::currency($payment->amount);
 
         if($payment->payment_method === 'Credit Card') {
@@ -91,7 +91,7 @@ class SendEmailsController extends Controller
 
            
             // add sent payment count 
-                $this->setPaymentSentCount($nonConverted->getOriginal());            
+                $this->setPaymentSentCount($nonConverted);            
         
         }
 

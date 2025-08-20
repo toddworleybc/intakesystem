@@ -1,3 +1,6 @@
+Version 1.2.3
+- fixed sending welcome email
+
 Version 1.2.2
 - fixed NAN after sending welcome email
 
